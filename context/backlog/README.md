@@ -84,7 +84,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-08](TSK-08.md)]: Develop JSONPersistenceAdapter & Atomic Write Protocol**  
   * *Epic Link:* FT-04 (Repository Ports & Safe Adapter)  
   * *RICE Score:* 100.0 (High Priority / Must Have) | Reach: 100 / Impact: 3 / Confidence: 1.0 / Effort: 3  
-  * *Status:* To Do  
+  * *Status:* Done  
 * **[[TSK-12](TSK-12.md)]: Implement Self-Healing Schema Recovery and Disaster Recovery DRP Suite**  
   * *Epic Link:* FT-04 (Repository Ports & Safe Adapter)  
   * *RICE Score:* 90.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 1.0 / Effort: 2  
@@ -134,7 +134,6 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🔴 To Do (Ready for Development)**
 
-* [ ] **[[TSK-08](TSK-08.md)]:** Develop JSONPersistenceAdapter & Atomic Write Protocol
 * [ ] **[[TSK-12](TSK-12.md)]:** Implement Self-Healing Schema Recovery and Disaster Recovery DRP Suite
 * [ ] **[[TSK-09](TSK-09.md)]:** Build CLI Parser and Command Arguments Router
 * [ ] **[[TSK-10](TSK-10.md)]:** Integrate Telemetry and Unicode CLI Console Badges
@@ -163,3 +162,4 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-05](TSK-05.md)]:** Create Application Use Case - CheckoutUseCase
 * [x] **[[TSK-06](TSK-06.md)]:** Create Application Use Case - ReturnUseCase
 * [x] **[[TSK-07](TSK-07.md)]:** Create Application Use Case - ReserveUseCase
+* [x] **[[TSK-08](TSK-08.md)]:** Develop JSONPersistenceAdapter & Atomic Write Protocol
