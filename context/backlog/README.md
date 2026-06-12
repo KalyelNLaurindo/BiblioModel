@@ -69,7 +69,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-05](TSK-05.md)]: Create Application Use Case - CheckoutUseCase**  
   * *Epic Link:* FT-03 (Use Case Interactors)  
   * *RICE Score:* 100.0 (High Priority / Must Have) | Reach: 100 / Impact: 3 / Confidence: 1.0 / Effort: 3  
-  * *Status:* To Do  
+  * *Status:* Done  
 * **[[TSK-06](TSK-06.md)]: Create Application Use Case - ReturnUseCase**  
   * *Epic Link:* FT-03 (Use Case Interactors)  
   * *RICE Score:* 100.0 (High Priority / Must Have) | Reach: 100 / Impact: 3 / Confidence: 1.0 / Effort: 3  
@@ -134,7 +134,6 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🔴 To Do (Ready for Development)**
 
-* [ ] **[[TSK-05](TSK-05.md)]:** Create Application Use Case - CheckoutUseCase
 * [ ] **[[TSK-06](TSK-06.md)]:** Create Application Use Case - ReturnUseCase
 * [ ] **[[TSK-07](TSK-07.md)]:** Create Application Use Case - ReserveUseCase
 * [ ] **[[TSK-08](TSK-08.md)]:** Develop JSONPersistenceAdapter & Atomic Write Protocol
@@ -163,3 +162,4 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-02](TSK-02.md)]:** Build Domain Entity - BookEntity and FIFO Hold Queue
 * [x] **[[TSK-03](TSK-03.md)]:** Build Domain Entities - ReaderEntity & LoanEntity
 * [x] **[[TSK-04](TSK-04.md)]:** Develop Domain Services - FineCalculator Engine
+* [x] **[[TSK-05](TSK-05.md)]:** Create Application Use Case - CheckoutUseCase

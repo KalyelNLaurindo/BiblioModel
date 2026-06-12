@@ -10,12 +10,12 @@ Construct the application use case class `CheckoutUseCase` inside `src/app/use_c
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] Namespace `src/app/` initialized.
-* [ ] Inbound port declarations defined.
+* [x] Namespace `src/app/` initialized.
+* [x] Inbound port declarations defined.
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Criterion 1 (Functional):** Checkout validates reader eligibility (loan count, suspensions, fines) and book availability before creating a loan record.
-* [ ] **Criterion 2 (Domain Invariant):** Blocks checkout if reader is suspended or book is already loaned/reserved.
-* [ ] **Criterion 3 (Quality/Test):** Unit tests in `tests/test_use_cases.py` execute checkout workflows under varying reader conditions.
-* [ ] **Criterion 4 (Review):** class relies on dependency injection for repository interfaces.
+* [x] **Criterion 1 (Functional):** Checkout validates reader eligibility (loan count, suspensions, fines) and book availability before creating a loan record.
+* [x] **Criterion 2 (Domain Invariant):** Blocks checkout if reader is suspended or book is already loaned/reserved.
+* [x] **Criterion 3 (Quality/Test):** Unit tests in `tests/test_use_cases.py` execute checkout workflows under varying reader conditions.
+* [x] **Criterion 4 (Review):** class relies on dependency injection for repository interfaces.

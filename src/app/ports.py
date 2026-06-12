@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+from datetime import date
+from typing import Optional
+from src.domain.entities import BookEntity, ReaderEntity, LoanEntity
 
 class IConfigProvider(ABC):
     """
@@ -32,4 +35,59 @@ class IConfigProvider(ABC):
         Returns the grace period in days before fines start accumulating.
         """
         pass
+
+
+class ILibraryRepository(ABC):
+    """
+    Outbound port defining database/persistence operations for library entities.
+    """
+
+    @abstractmethod
+    def get_book(self, book_id: str) -> Optional[BookEntity]:
+        """
+        Retrieves a book by its unique ID.
+        """
+        pass
+
+    @abstractmethod
+    def save_book(self, book: BookEntity) -> None:
+        """
+        Saves or updates a book's state in the repository.
+        """
+        pass
+
+    @abstractmethod
+    def get_reader(self, reader_id: str) -> Optional[ReaderEntity]:
+        """
+        Retrieves a reader by their unique ID.
+        """
+        pass
+
+    @abstractmethod
+    def save_reader(self, reader: ReaderEntity) -> None:
+        """
+        Saves or updates a reader's state in the repository.
+        """
+        pass
+
+    @abstractmethod
+    def save_loan(self, loan: LoanEntity) -> None:
+        """
+        Saves or updates a loan transaction in the repository.
+        """
+        pass
+
+
+class ICheckoutUseCase(ABC):
+    """
+    Inbound port defining the checkout/loan execution use case.
+    """
+
+    @abstractmethod
+    def execute(self, reader_id: str, book_id: str, checkout_date: date) -> LoanEntity:
+        """
+        Executes the book loan process for a given reader.
+        """
+        pass
+
 
