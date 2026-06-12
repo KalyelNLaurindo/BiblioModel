@@ -10,12 +10,13 @@ Construct a custom console utility to render data outputs (such as book lists, a
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] CLI Argument Router (`TSK-09`) is functional.
-* [ ] Database read adapters and domain entity collections are ready.
+* [x] CLI Argument Router (`TSK-09`) is functional.
+* [x] Database read adapters and domain entity collections are ready.
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Criterion 1 (Functional):** The CLI outputs tables (e.g., when calling `bibliomodel list-books` or `bibliomodel report`) wrapped in clean boxes made of single-line or double-line box-drawing characters, maintaining correct column alignment for varying text sizes.
-* [ ] **Criterion 2 (Quality/Test):** Unit tests located in `tests/test_use_cases.py` verify that formatting functions return correct string lengths and boundary paddings.
-* [ ] **Criterion 3 (Security/Resilience):** Handles long string inputs (such as very long book titles) by trimming or wrapping text to prevent table boundaries from breaking.
-* [ ] **Criterion 4 (Review):** Standard library only (zero external libraries like `tabulate` or `rich`). Written entirely in pure Python.
+* [x] **Criterion 1 (Functional):** The CLI outputs tables (e.g., when calling `bibliomodel list-books` or `bibliomodel report`) wrapped in clean boxes made of single-line or double-line box-drawing characters, maintaining correct column alignment for varying text sizes.
+* [x] **Criterion 2 (Quality/Test):** Unit tests located in `tests/test_use_cases.py` (or test_infra.py) verify that formatting functions return correct string lengths and boundary paddings.
+* [x] **Criterion 3 (Security/Resilience):** Handles long string inputs (such as very long book titles) by trimming or wrapping text to prevent table boundaries from breaking.
+* [x] **Criterion 4 (Review):** Standard library only (zero external libraries like `tabulate` or `rich`). Written entirely in pure Python.
+
