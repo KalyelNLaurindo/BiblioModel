@@ -2,7 +2,7 @@ import pytest
 from datetime import date
 from src.domain.entities import BookEntity, ReaderEntity, LoanEntity, DomainError
 from src.app.ports import ILibraryRepository, IConfigProvider
-from src.app.use_cases import CheckoutUseCase, ReturnUseCase
+from src.app.use_cases import CheckoutUseCase, ReturnUseCase, ReserveUseCase
 from typing import Dict, Optional
 
 class FakeLibraryRepository(ILibraryRepository):
@@ -415,3 +415,142 @@ def test_return_invalid_date() -> None:
     # Return date is June 5th, but checkout date is June 10th (invalid!)
     with pytest.raises(DomainError, match="Return date cannot be before checkout date"):
         use_case.execute(book_id="B1", return_date=date(2026, 6, 5))
+
+
+def test_reserve_success() -> None:
+    # Arrange
+    repo = FakeLibraryRepository()
+    
+    book = BookEntity("B1", "DDD")
+    book.loan_to("R2") # book is loaned, so it can be reserved
+    
+    reader = ReaderEntity("R1", "Alice")
+    
+    repo.save_book(book)
+    repo.save_reader(reader)
+    
+    use_case = ReserveUseCase(repository=repo)
+    
+    # Act
+    updated_book = use_case.execute(reader_id="R1", book_id="B1")
+    
+    # Assert
+    assert updated_book.status == "Reserved"
+    assert updated_book.hold_queue == ["R1"]
+    
+    # Verify changes were saved to repo
+    saved_book = repo.get_book("B1")
+    assert saved_book is not None
+    assert saved_book.status == "Reserved"
+    assert saved_book.hold_queue == ["R1"]
+
+
+def test_reserve_multiple_fifo() -> None:
+    # Arrange
+    repo = FakeLibraryRepository()
+    
+    book = BookEntity("B1", "DDD")
+    book.loan_to("R3")
+    
+    reader1 = ReaderEntity("R1", "Alice")
+    reader2 = ReaderEntity("R2", "Bob")
+    
+    repo.save_book(book)
+    repo.save_reader(reader1)
+    repo.save_reader(reader2)
+    
+    use_case = ReserveUseCase(repository=repo)
+    
+    # Act
+    use_case.execute(reader_id="R1", book_id="B1")
+    updated_book = use_case.execute(reader_id="R2", book_id="B1")
+    
+    # Assert
+    assert updated_book.status == "Reserved"
+    assert updated_book.hold_queue == ["R1", "R2"]
+
+
+def test_reserve_reader_holds_book() -> None:
+    # Arrange
+    repo = FakeLibraryRepository()
+    
+    book = BookEntity("B1", "DDD")
+    book.loan_to("R1") # reader R1 holds it
+    
+    reader = ReaderEntity("R1", "Alice")
+    loan = LoanEntity("L1", "B1", "R1", date(2026, 6, 10), date(2026, 6, 17))
+    reader.add_loan(loan)
+    
+    repo.save_book(book)
+    repo.save_reader(reader)
+    repo.save_loan(loan)
+    
+    use_case = ReserveUseCase(repository=repo)
+    
+    # Act & Assert
+    with pytest.raises(DomainError, match="Reader cannot reserve a book they currently hold"):
+        use_case.execute(reader_id="R1", book_id="B1")
+
+
+def test_reserve_redundant() -> None:
+    # Arrange
+    repo = FakeLibraryRepository()
+    
+    book = BookEntity("B1", "DDD")
+    book.loan_to("R2")
+    book.reserve("R1") # R1 already reserved it once
+    
+    reader = ReaderEntity("R1", "Alice")
+    
+    repo.save_book(book)
+    repo.save_reader(reader)
+    
+    use_case = ReserveUseCase(repository=repo)
+    
+    # Act & Assert
+    with pytest.raises(DomainError, match="Reader has already reserved this book"):
+        use_case.execute(reader_id="R1", book_id="B1")
+
+
+def test_reserve_book_available() -> None:
+    # Arrange
+    repo = FakeLibraryRepository()
+    
+    book = BookEntity("B1", "DDD") # Available status
+    reader = ReaderEntity("R1", "Alice")
+    
+    repo.save_book(book)
+    repo.save_reader(reader)
+    
+    use_case = ReserveUseCase(repository=repo)
+    
+    # Act & Assert
+    with pytest.raises(DomainError, match="Book is available and can be checked out directly"):
+        use_case.execute(reader_id="R1", book_id="B1")
+
+
+def test_reserve_book_not_found() -> None:
+    # Arrange
+    repo = FakeLibraryRepository()
+    reader = ReaderEntity("R1", "Alice")
+    repo.save_reader(reader)
+    
+    use_case = ReserveUseCase(repository=repo)
+    
+    # Act & Assert
+    with pytest.raises(DomainError, match="Book not found"):
+        use_case.execute(reader_id="R1", book_id="B999")
+
+
+def test_reserve_reader_not_found() -> None:
+    # Arrange
+    repo = FakeLibraryRepository()
+    book = BookEntity("B1", "DDD")
+    book.loan_to("R2")
+    repo.save_book(book)
+    
+    use_case = ReserveUseCase(repository=repo)
+    
+    # Act & Assert
+    with pytest.raises(DomainError, match="Reader not found"):
+        use_case.execute(reader_id="R999", book_id="B1")
