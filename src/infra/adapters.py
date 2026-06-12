@@ -170,17 +170,26 @@ class JSONPersistenceAdapter(ILibraryRepository):
             # Fall back and try loading recovery backup file (.bak)
             bak_path = self._file_path + ".bak"
             if os.path.exists(bak_path) and os.path.getsize(bak_path) > 0:
+                logger = logging.getLogger("bibliomodel")
+                logger.warning(
+                    f"Primary database '{self._file_path}' is corrupted: {e}. "
+                    f"Attempting self-healing recovery from backup '{bak_path}'..."
+                )
                 try:
                     self._parse_and_validate(bak_path)
-                    # Recovery restore: re-serialize to the primary file path
-                    self._save_to_disk()
+                    # Recovery restore: write atomically to primary path without rotating/overwriting backup
+                    self._recovery_save_to_disk()
+                    logger.warning("Self-healing successful. Primary database restored.")
                     return
-                except Exception:
-                    pass
+                except Exception as rec_err:
+                    logger.error(f"Self-healing recovery failed: {rec_err}")
             # If recovery also failed or bak does not exist, throw DomainError
             raise DomainError(f"Database file is corrupted and recovery failed: {e}")
 
-    def _save_to_disk(self) -> None:
+    def _serialize_state(self) -> dict:
+        """
+        Helper method to serialize in-memory entities to a dictionary representation.
+        """
         books_data = {}
         for bid, book in self._books.items():
             books_data[bid] = {
@@ -213,12 +222,14 @@ class JSONPersistenceAdapter(ILibraryRepository):
                 "active_loans": active_loan_ids
             }
 
-        serialized = {
+        return {
             "books": books_data,
             "readers": readers_data,
             "loans": loans_data
         }
 
+    def _save_to_disk(self) -> None:
+        serialized = self._serialize_state()
         tmp_path = self._file_path + ".tmp"
         bak_path = self._file_path + ".bak"
 
@@ -240,6 +251,30 @@ class JSONPersistenceAdapter(ILibraryRepository):
                 except Exception:
                     pass
             raise DomainError(f"Failed to persist state database to disk: {e}")
+
+    def _recovery_save_to_disk(self) -> None:
+        """
+        Recovery restore: write atomically to the primary file path
+        without rotating the corrupted file to backup.
+        """
+        serialized = self._serialize_state()
+        tmp_path = self._file_path + ".tmp"
+
+        try:
+            # Write to .tmp file
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                json.dump(serialized, f, indent=2)
+
+            # Atomic swap directly over primary file
+            os.replace(tmp_path, self._file_path)
+        except Exception as e:
+            if os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except Exception:
+                    pass
+            raise DomainError(f"Recovery state write failed: {e}")
+
 
     # ILibraryRepository port implementations
     def get_book(self, book_id: str) -> Optional[BookEntity]:

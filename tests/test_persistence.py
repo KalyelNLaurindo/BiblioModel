@@ -96,7 +96,7 @@ def test_atomic_write_rotation() -> None:
             os.remove(bak_path)
 
 
-def test_recovery_from_corrupted_json() -> None:
+def test_recovery_from_corrupted_json(caplog) -> None:
     # Arrange
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as tmp:
         tmp_path = tmp.name
@@ -126,11 +126,24 @@ def test_recovery_from_corrupted_json() -> None:
             data = json.load(f)
             assert "books" in data
             assert "B1" in data["books"]
+
+        # Verify warning logs were produced
+        warnings = [record.message for record in caplog.records if record.levelname == "WARNING"]
+        assert any("corrupted" in w.lower() for w in warnings)
+        assert any("successful" in w.lower() or "restored" in w.lower() for w in warnings)
+
+        # Verify that the backup file is still valid and not replaced by corrupted data
+        with open(bak_path, "r", encoding="utf-8") as f:
+            bak_data = json.load(f)
+            assert "books" in bak_data
+            assert "B1" in bak_data["books"]
+            assert bak_data["books"]["B1"]["title"] == "Backup Title"
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
         if os.path.exists(bak_path):
             os.remove(bak_path)
+
 
 
 def test_schema_validation_boot_failure() -> None:
