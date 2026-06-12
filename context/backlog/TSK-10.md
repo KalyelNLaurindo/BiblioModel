@@ -10,12 +10,13 @@ Integrate standard console feedback tags and operational timing metrics. Termina
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] CLI parser router is functional.
-* [ ] Log structures in adapters are defined.
+* [x] CLI parser router is functional.
+* [x] Log structures in adapters are defined.
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Criterion 1 (Functional):** CLI displays color-coded messages with Unicode badges corresponding to validation outcomes.
-* [ ] **Criterion 2 (Quality/Test):** Console outputs assert structure formatting on test commands.
-* [ ] **Criterion 3 (Security/Resilience):** Timestamps and operator environments are captured in log records.
-* [ ] **Criterion 4 (Review):** Output format functions are separated from core domain components.
+* [x] **Criterion 1 (Functional):** CLI displays color-coded messages with Unicode badges corresponding to validation outcomes.
+* [x] **Criterion 2 (Quality/Test):** Console outputs assert structure formatting on test commands.
+* [x] **Criterion 3 (Security/Resilience):** Timestamps and operator environments are captured in log records.
+* [x] **Criterion 4 (Review):** Output format functions are separated from core domain components.
+
