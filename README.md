@@ -125,10 +125,15 @@ BiblioModel/
 │   ├── test_domain.py            # Unit tests validating rules and domain entities
 │   ├── test_use_cases.py         # Integration tests validating use case flows
 │   └── test_persistence.py       # Persistence tests (atomic writes & self-healing)
+├── context/                      # Agile management context and sprint backlogs
+│   └── backlog/                  # Kanban board master and atomic task specifications (TSKs)
 ├── pyproject.toml                # Standard setuptools configuration file
 ├── config.ini                    # Core parameter configurations (fine daily rates, limits)
+├── CHANGELOG.md                  # Detailed history of versions and completed changes
+├── CLAUDE.md                     # Agent context reference guide and build/test commands
 └── README.md                     # Initial setup instructions and documentation
 ```
+
 
 ---
 
