@@ -393,6 +393,61 @@ def test_cli_list_commands() -> None:
     assert "┌" in res_loans
 
 
+def test_cli_shell_command(capsys) -> None:
+    from unittest.mock import patch
+    from src.infra.cli import CLIController
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    
+    book = BookEntity("B1", "DDD Book")
+    repo.save_book(book)
+    
+    controller = CLIController(repo, config)
+    
+    # We patch builtins.input to run 'list-books', then 'exit'
+    with patch("builtins.input", side_effect=["list-books", "exit"]):
+        res = controller.execute(["shell"])
+        
+    captured = capsys.readouterr()
+    assert "BIBLIOMODEL CLI" in captured.out
+    assert "DDD Book" in captured.out
+    assert "Goodbye!" in captured.out
+    assert "Interactive shell closed." in res
+
+
+def test_cli_shell_keyboard_interrupt(capsys) -> None:
+    from unittest.mock import patch
+    from src.infra.cli import CLIController
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    controller = CLIController(repo, config)
+    
+    # We patch builtins.input to raise KeyboardInterrupt
+    with patch("builtins.input", side_effect=KeyboardInterrupt()):
+        res = controller.execute(["shell"])
+        
+    captured = capsys.readouterr()
+    assert "Goodbye!" in captured.out
+    assert "Interactive shell closed." in res
+
+
+def test_cli_shell_eof(capsys) -> None:
+    from unittest.mock import patch
+    from src.infra.cli import CLIController
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    controller = CLIController(repo, config)
+    
+    # We patch builtins.input to raise EOFError
+    with patch("builtins.input", side_effect=EOFError()):
+        res = controller.execute(["shell"])
+        
+    captured = capsys.readouterr()
+    assert "Goodbye!" in captured.out
+    assert "Interactive shell closed." in res
+
+
+
 
 
 
