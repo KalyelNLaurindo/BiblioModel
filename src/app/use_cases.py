@@ -1,7 +1,8 @@
 import uuid
 from datetime import date, timedelta
 from src.domain.entities import LoanEntity, DomainError
-from src.app.ports import ILibraryRepository, IConfigProvider, ICheckoutUseCase
+from src.domain.services import FineCalculator
+from src.app.ports import ILibraryRepository, IConfigProvider, ICheckoutUseCase, IReturnUseCase
 
 class CheckoutUseCase(ICheckoutUseCase):
     """
@@ -52,6 +53,67 @@ class CheckoutUseCase(ICheckoutUseCase):
 
         # Associate loan with the reader
         reader.add_loan(loan)
+
+        # Persist updated states
+        self.repository.save_book(book)
+        self.repository.save_reader(reader)
+        self.repository.save_loan(loan)
+
+        return loan
+
+
+class ReturnUseCase(IReturnUseCase):
+    """
+    Coordinates domain objects to execute book returns and calculate late fines.
+    """
+
+    def __init__(self, repository: ILibraryRepository, config_provider: IConfigProvider) -> None:
+        self.repository = repository
+        self.config_provider = config_provider
+
+    def execute(self, book_id: str, return_date: date) -> LoanEntity:
+        # Retrieve book from repository
+        book = self.repository.get_book(book_id)
+        if not book:
+            raise DomainError("Book not found")
+
+        # Retrieve active loan for this book
+        loan = self.repository.get_active_loan_by_book(book_id)
+        if not loan:
+            raise DomainError("No active loan found for this book")
+
+        # Validate return date
+        if return_date < loan.checkout_date:
+            raise DomainError("Return date cannot be before checkout date")
+
+        # Retrieve reader
+        reader = self.repository.get_reader(loan.reader_id)
+        if not reader:
+            raise DomainError("Reader not found")
+
+        # Calculate late fine using FineCalculator
+        calculator = FineCalculator()
+        daily_rate = self.config_provider.get_daily_fine_rate()
+        grace_period = self.config_provider.get_grace_period_days()
+
+        fine = calculator.calculate_fine(
+            due_date=loan.due_date,
+            return_date=return_date,
+            daily_rate=daily_rate,
+            grace_period_days=grace_period
+        )
+
+        # Apply fine to reader and transaction if fine > 0
+        if fine > 0.0:
+            reader.apply_fine(fine)
+            loan.fine_amount = fine
+
+        # Perform return transitions in entities
+        reader.return_loan(book_id, return_date)
+        book.return_book()
+
+        # Update reader's suspension status immediately
+        reader.update_status(return_date)
 
         # Persist updated states
         self.repository.save_book(book)

@@ -77,6 +77,13 @@ class ILibraryRepository(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_active_loan_by_book(self, book_id: str) -> Optional[LoanEntity]:
+        """
+        Retrieves the single active loan associated with the book (where return_date is None).
+        """
+        pass
+
 
 class ICheckoutUseCase(ABC):
     """
@@ -87,6 +94,19 @@ class ICheckoutUseCase(ABC):
     def execute(self, reader_id: str, book_id: str, checkout_date: date) -> LoanEntity:
         """
         Executes the book loan process for a given reader.
+        """
+        pass
+
+
+class IReturnUseCase(ABC):
+    """
+    Inbound port defining the book return execution use case.
+    """
+
+    @abstractmethod
+    def execute(self, book_id: str, return_date: date) -> LoanEntity:
+        """
+        Executes the book return process.
         """
         pass
 

@@ -2,7 +2,7 @@ import pytest
 from datetime import date
 from src.domain.entities import BookEntity, ReaderEntity, LoanEntity, DomainError
 from src.app.ports import ILibraryRepository, IConfigProvider
-from src.app.use_cases import CheckoutUseCase
+from src.app.use_cases import CheckoutUseCase, ReturnUseCase
 from typing import Dict, Optional
 
 class FakeLibraryRepository(ILibraryRepository):
@@ -25,6 +25,12 @@ class FakeLibraryRepository(ILibraryRepository):
 
     def save_loan(self, loan: LoanEntity) -> None:
         self.loans[loan.loan_id] = loan
+
+    def get_active_loan_by_book(self, book_id: str) -> Optional[LoanEntity]:
+        for loan in self.loans.values():
+            if loan.book_id == book_id and loan.return_date is None:
+                return loan
+        return None
 
 
 class FakeConfigProvider(IConfigProvider):
@@ -228,3 +234,184 @@ def test_checkout_book_reserved_for_self() -> None:
     assert loan.reader_id == "R1"
     assert book.status == "Loaned"
     assert book.hold_queue == []
+
+
+def test_return_success_on_time() -> None:
+    # Arrange
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    
+    book = BookEntity("B1", "DDD")
+    book.loan_to("R1")
+    
+    reader = ReaderEntity("R1", "Alice")
+    loan = LoanEntity("L1", "B1", "R1", date(2026, 6, 1), date(2026, 6, 8))
+    reader.add_loan(loan)
+    
+    repo.save_book(book)
+    repo.save_reader(reader)
+    repo.save_loan(loan)
+    
+    use_case = ReturnUseCase(repository=repo, config_provider=config)
+    
+    # Act
+    updated_loan = use_case.execute(book_id="B1", return_date=date(2026, 6, 5))
+    
+    # Assert
+    assert updated_loan.return_date == date(2026, 6, 5)
+    assert updated_loan.fine_amount == 0.0
+    
+    # Book status should be Available since no reservations exist
+    saved_book = repo.get_book("B1")
+    assert saved_book is not None
+    assert saved_book.status == "Available"
+    
+    # Reader active loans should be empty
+    saved_reader = repo.get_reader("R1")
+    assert saved_reader is not None
+    assert saved_reader.active_loans == []
+    assert saved_reader.status == "Active"
+
+
+def test_return_success_within_grace_period() -> None:
+    # Arrange
+    repo = FakeLibraryRepository()
+    # 2 days grace period
+    config = FakeConfigProvider()
+    config.get_grace_period_days = lambda: 2  # override grace period
+    
+    book = BookEntity("B1", "DDD")
+    book.loan_to("R1")
+    
+    reader = ReaderEntity("R1", "Alice")
+    loan = LoanEntity("L1", "B1", "R1", date(2026, 6, 1), date(2026, 6, 8))
+    reader.add_loan(loan)
+    
+    repo.save_book(book)
+    repo.save_reader(reader)
+    repo.save_loan(loan)
+    
+    use_case = ReturnUseCase(repository=repo, config_provider=config)
+    
+    # Act
+    # 2 days late (returned on June 10th instead of 8th) -> within grace period -> 0 fine
+    updated_loan = use_case.execute(book_id="B1", return_date=date(2026, 6, 10))
+    
+    # Assert
+    assert updated_loan.fine_amount == 0.0
+    
+    saved_reader = repo.get_reader("R1")
+    assert saved_reader is not None
+    assert saved_reader.fine_balance == 0.0
+    assert saved_reader.status == "Active"
+
+
+def test_return_late_with_fine() -> None:
+    # Arrange
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider() # daily rate: 2.00, grace: 0
+    
+    book = BookEntity("B1", "DDD")
+    book.loan_to("R1")
+    
+    reader = ReaderEntity("R1", "Alice")
+    loan = LoanEntity("L1", "B1", "R1", date(2026, 6, 1), date(2026, 6, 8))
+    reader.add_loan(loan)
+    
+    repo.save_book(book)
+    repo.save_reader(reader)
+    repo.save_loan(loan)
+    
+    use_case = ReturnUseCase(repository=repo, config_provider=config)
+    
+    # Act
+    # 3 days late -> fine of 3 * 2.00 = 6.00 -> reader suspended immediately
+    updated_loan = use_case.execute(book_id="B1", return_date=date(2026, 6, 11))
+    
+    # Assert
+    assert updated_loan.fine_amount == 6.00
+    
+    saved_reader = repo.get_reader("R1")
+    assert saved_reader is not None
+    assert saved_reader.fine_balance == 6.00
+    assert saved_reader.status == "Suspended" # suspended immediately due to fine
+
+
+def test_return_reserved_book() -> None:
+    # Arrange
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    
+    book = BookEntity("B1", "DDD")
+    book.loan_to("R1")
+    book.reserve("R2") # R2 reserved it
+    
+    reader = ReaderEntity("R1", "Alice")
+    loan = LoanEntity("L1", "B1", "R1", date(2026, 6, 1), date(2026, 6, 8))
+    reader.add_loan(loan)
+    
+    repo.save_book(book)
+    repo.save_reader(reader)
+    repo.save_loan(loan)
+    
+    use_case = ReturnUseCase(repository=repo, config_provider=config)
+    
+    # Act
+    use_case.execute(book_id="B1", return_date=date(2026, 6, 5))
+    
+    # Assert
+    # Book status should be Reserved (not Available) because of the hold queue
+    saved_book = repo.get_book("B1")
+    assert saved_book is not None
+    assert saved_book.status == "Reserved"
+    assert saved_book.hold_queue == ["R2"]
+
+
+def test_return_book_not_found() -> None:
+    # Arrange
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    use_case = ReturnUseCase(repository=repo, config_provider=config)
+    
+    # Act & Assert
+    with pytest.raises(DomainError, match="Book not found"):
+        use_case.execute(book_id="B999", return_date=date(2026, 6, 5))
+
+
+def test_return_no_active_loan() -> None:
+    # Arrange
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    
+    book = BookEntity("B1", "DDD") # Available, not loaned
+    repo.save_book(book)
+    
+    use_case = ReturnUseCase(repository=repo, config_provider=config)
+    
+    # Act & Assert
+    with pytest.raises(DomainError, match="No active loan found for this book"):
+        use_case.execute(book_id="B1", return_date=date(2026, 6, 5))
+
+
+def test_return_invalid_date() -> None:
+    # Arrange
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    
+    book = BookEntity("B1", "DDD")
+    book.loan_to("R1")
+    
+    reader = ReaderEntity("R1", "Alice")
+    loan = LoanEntity("L1", "B1", "R1", date(2026, 6, 10), date(2026, 6, 17))
+    reader.add_loan(loan)
+    
+    repo.save_book(book)
+    repo.save_reader(reader)
+    repo.save_loan(loan)
+    
+    use_case = ReturnUseCase(repository=repo, config_provider=config)
+    
+    # Act & Assert
+    # Return date is June 5th, but checkout date is June 10th (invalid!)
+    with pytest.raises(DomainError, match="Return date cannot be before checkout date"):
+        use_case.execute(book_id="B1", return_date=date(2026, 6, 5))
