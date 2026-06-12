@@ -10,12 +10,12 @@ Construct the outbound infrastructure adapter `JSONPersistenceAdapter` inside `s
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] Outbound repository interfaces in `src/app/ports.py` defined.
-* [ ] Namespace `src/infra/` ready.
+* [x] Outbound repository interfaces in `src/app/ports.py` defined.
+* [x] Namespace `src/infra/` ready.
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Criterion 1 (Functional):** Adapter converts in-memory states to JSON strings and writes them to local disk storage.
-* [ ] **Criterion 2 (Resilience):** Writes serialize to `db_backup.tmp` first, then perform an atomic operating system rename to replace `db_backup.json`. Rotates old backup to `db_backup.json.bak` on success.
-* [ ] **Criterion 3 (Quality/Test):** Persistence tests in `tests/test_persistence.py` simulate mid-write crashes, asserting that active states are not corrupted.
-* [ ] **Criterion 4 (Review):** Implements schemas validating file structures on boot.
+* [x] **Criterion 1 (Functional):** Adapter converts in-memory states to JSON strings and writes them to local disk storage.
+* [x] **Criterion 2 (Resilience):** Writes serialize to `db_backup.tmp` first, then perform an atomic operating system rename to replace `db_backup.json`. Rotates old backup to `db_backup.json.bak` on success.
+* [x] **Criterion 3 (Quality/Test):** Persistence tests in `tests/test_persistence.py` simulate mid-write crashes, asserting that active states are not corrupted.
+* [x] **Criterion 4 (Review):** Implements schemas validating file structures on boot.
