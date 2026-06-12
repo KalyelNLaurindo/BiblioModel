@@ -10,8 +10,8 @@ Construct the pure domain service class `FineCalculator` inside `src/domain/serv
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] Target namespace `src/domain/services.py` exists.
-* [ ] Domain entities `ReaderEntity` and `LoanEntity` are completed.
+* [x] Target namespace `src/domain/services.py` exists.
+* [x] Domain entities `ReaderEntity` and `LoanEntity` are completed.
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
