@@ -169,3 +169,86 @@ def test_reader_suspension_due_to_overdue_loans() -> None:
     reader.update_status(date(2026, 6, 10))
     assert reader.status == "Active"
 
+
+def test_fine_calculator_within_grace_period() -> None:
+    from src.domain.services import FineCalculator
+    from datetime import date
+
+    calc = FineCalculator()
+    
+    # Within grace period of 2 days (1 day late -> fine should be 0.0)
+    fine = calc.calculate_fine(
+        due_date=date(2026, 6, 1),
+        return_date=date(2026, 6, 2),
+        daily_rate=2.00,
+        grace_period_days=2
+    )
+    assert fine == 0.0
+
+    # Exactly at grace period of 2 days (2 days late -> fine should be 0.0)
+    fine = calc.calculate_fine(
+        due_date=date(2026, 6, 1),
+        return_date=date(2026, 6, 3),
+        daily_rate=2.00,
+        grace_period_days=2
+    )
+    assert fine == 0.0
+
+
+def test_fine_calculator_exceeding_grace_period() -> None:
+    from src.domain.services import FineCalculator
+    from datetime import date
+
+    calc = FineCalculator()
+
+    # Exceeding grace period of 2 days (3 days late -> fine should be 3 * 2.00 = 6.00)
+    fine = calc.calculate_fine(
+        due_date=date(2026, 6, 1),
+        return_date=date(2026, 6, 4),
+        daily_rate=2.00,
+        grace_period_days=2
+    )
+    assert fine == 6.00
+
+
+def test_fine_calculator_no_grace_period() -> None:
+    from src.domain.services import FineCalculator
+    from datetime import date
+
+    calc = FineCalculator()
+
+    # No grace period (1 day late -> fine should be 1 * 2.00 = 2.00)
+    fine = calc.calculate_fine(
+        due_date=date(2026, 6, 1),
+        return_date=date(2026, 6, 2),
+        daily_rate=2.00,
+        grace_period_days=0
+    )
+    assert fine == 2.00
+
+
+def test_fine_calculator_returned_on_time() -> None:
+    from src.domain.services import FineCalculator
+    from datetime import date
+
+    calc = FineCalculator()
+
+    # Returned exactly on time -> fine is 0.0
+    fine = calc.calculate_fine(
+        due_date=date(2026, 6, 5),
+        return_date=date(2026, 6, 5),
+        daily_rate=2.00,
+        grace_period_days=2
+    )
+    assert fine == 0.0
+
+    # Returned early -> fine is 0.0
+    fine = calc.calculate_fine(
+        due_date=date(2026, 6, 5),
+        return_date=date(2026, 6, 4),
+        daily_rate=2.00,
+        grace_period_days=2
+    )
+    assert fine == 0.0
+
+

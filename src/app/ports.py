@@ -25,3 +25,11 @@ class IConfigProvider(ABC):
         Returns the daily fine rate amount for overdue books.
         """
         pass
+
+    @abstractmethod
+    def get_grace_period_days(self) -> int:
+        """
+        Returns the grace period in days before fines start accumulating.
+        """
+        pass
+

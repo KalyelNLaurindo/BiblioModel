@@ -6,7 +6,7 @@ from src.infra.adapters import INIConfigAdapter
 def test_ini_config_adapter_loads_values() -> None:
     # Create a temporary config file
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.ini') as tmp:
-        tmp.write("[library]\nmax_loans = 5\nloan_period_days = 14\ndaily_fine_rate = 1.50\n")
+        tmp.write("[library]\nmax_loans = 5\nloan_period_days = 14\ndaily_fine_rate = 1.50\ngrace_period_days = 3\n")
         tmp_path = tmp.name
 
     try:
@@ -14,6 +14,7 @@ def test_ini_config_adapter_loads_values() -> None:
         assert adapter.get_max_loans() == 5
         assert adapter.get_loan_period_days() == 14
         assert adapter.get_daily_fine_rate() == 1.50
+        assert adapter.get_grace_period_days() == 3
     finally:
         os.remove(tmp_path)
 
@@ -23,6 +24,7 @@ def test_ini_config_adapter_fallback_on_missing_file() -> None:
     assert adapter.get_max_loans() == 3
     assert adapter.get_loan_period_days() == 7
     assert adapter.get_daily_fine_rate() == 2.00
+    assert adapter.get_grace_period_days() == 0
 
 def test_ini_config_adapter_fallback_on_missing_options() -> None:
     # Create a temporary config file with missing options
@@ -35,8 +37,10 @@ def test_ini_config_adapter_fallback_on_missing_options() -> None:
         assert adapter.get_max_loans() == 10
         assert adapter.get_loan_period_days() == 7  # default fallback
         assert adapter.get_daily_fine_rate() == 2.00  # default fallback
+        assert adapter.get_grace_period_days() == 0  # default fallback
     finally:
         os.remove(tmp_path)
+
 
 def test_setup_logger() -> None:
     from src.infra.adapters import setup_logger
