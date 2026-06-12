@@ -120,3 +120,25 @@ Maintain strict compliance with PEP 8 and the following conventions:
     *   `docs(scope):` Updates markdown documents, guides, changelogs, or walkthroughs.
     *   `test(scope):` Adds or updates test files without changing production code.
     *   `chore(scope):` Builds setups, git configurations, or project bootstrapping actions.
+
+---
+
+## 📋 Planning & Execution Flow Checklist
+
+For every task, the AI agent and developer must strictly follow this lifecycle:
+
+1.  **Planning Phase (Before Code Modifications):**
+    *   Create `implementation_plan.md` in the current conversation directory (written in Portuguese, PT-BR).
+    *   Mark `request_feedback = true` in the plan metadata.
+    *   **STOP** and wait for the user's explicit approval before writing any code.
+2.  **Execution Phase (TDD Protocol):**
+    *   Create/update `task.md` in the conversation directory to track checklist items using `[ ]` (pending), `[/]` (in progress), and `[x]` (completed).
+    *   Write corresponding test cases under `tests/` **BEFORE** implementing production code. Run pytest to assert they fail.
+    *   Implement domain logic in `src/` to satisfy the tests.
+    *   Run all tests with `pytest` to achieve 100% pass rate.
+3.  **Completion & Delivery Phase:**
+    *   Mark all **Definition of Ready (DoR)** and **Definition of Done (DoD)** checkboxes as completed (`[x]`) inside the task's individual markdown file (`context/backlog/TSK-XX.md`).
+    *   Update the Kanban board and the task status to `Done` in the backlog master file (`context/backlog/README.md`).
+    *   Create `walkthrough.md` in the conversation directory summarizing changes (written in Portuguese, PT-BR).
+    *   Stage and commit modified files using Conventional Commits naming standards (e.g., `feat(domain): ...`, `docs(backlog): ...`).
+
