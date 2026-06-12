@@ -125,6 +125,71 @@ class CLIFormatter:
         return banner
 
 
+class CLIHelpSystem:
+    """
+    Decoupled utility to format and display comprehensive library rules,
+    CLI commands, parameter constraints, and example usages.
+    """
+    @staticmethod
+    def render_help(config_provider: IConfigProvider) -> str:
+        banner = CLIFormatter.get_welcome_banner()
+        
+        # Fetch configurations safely
+        try:
+            max_loans = config_provider.get_max_loans()
+            loan_days = config_provider.get_loan_period_days()
+            fine_rate = config_provider.get_daily_fine_rate()
+            grace_days = config_provider.get_grace_period_days()
+        except Exception:
+            max_loans = 3
+            loan_days = 7
+            fine_rate = 2.00
+            grace_days = 0
+
+        # Build Rules section
+        rules_str = (
+            "┌────────────────────────────────────────────────────────────────┐\n"
+            "│                    REGRAS DE NEGÓCIO ATIVAS                    │\n"
+            "├────────────────────────────────────────────────────────────────┤\n"
+            f"│  • Limite de Empréstimos Simultâneos: {max_loans:<24} │\n"
+            f"│  • Período de Empréstimo: {str(loan_days) + ' dias':<37} │\n"
+            f"│  • Taxa de Multa Diária: ${fine_rate:<30.2f} │\n"
+            f"│  • Período de Carência: {str(grace_days) + ' dias':<39} │\n"
+            "└────────────────────────────────────────────────────────────────┘"
+        )
+
+        # Build Commands section
+        commands_headers = ["Comando", "Parâmetros Obrigatórios / Opcionais", "Descrição"]
+        commands_rows = [
+            ["loan", "--book <id> --reader <id> [--date YYYY-MM-DD]", "Registra empréstimo de um livro."],
+            ["return", "--book <id> [--date YYYY-MM-DD]", "Registra a devolução de um livro."],
+            ["reserve", "--book <id> --reader <id>", "Reserva um livro indisponível (Fila FIFO)."],
+            ["report", "Nenhum", "Exporta e exibe o relatório diário do sistema."],
+            ["waive", "--reader <id> --operator <nome> --reason <motivo>", "Realiza o perdão auditado de multas."],
+            ["list-books", "Nenhum", "Lista todos os livros e filas de reservas."],
+            ["list-readers", "Nenhum", "Lista os leitores cadastrados e saldos."],
+            ["list-loans", "Nenhum", "Lista o histórico completo de empréstimos."],
+            ["shell", "Nenhum", "Inicia o console interativo multi-comandos."],
+            ["help", "Nenhum", "Exibe este painel de ajuda e documentação."]
+        ]
+        commands_table = CLIFormatter.render_table(commands_headers, commands_rows, max_col_width=45)
+
+        examples_str = (
+            "EXEMPLOS DE USO:\n"
+            "  • Realizar Empréstimo:    bibliomodel loan --book B001 --reader R101\n"
+            "  • Registrar Devolução:    bibliomodel return --book B001 --date 2026-06-15\n"
+            "  • Fazer Nova Reserva:     bibliomodel reserve --book B001 --reader R102\n"
+            "  • Perdoar Multa Leitor:   bibliomodel waive --reader R101 --operator \"Diretor\" --reason \"Disputa aceita\""
+        )
+
+        help_output = (
+            f"{banner}\n\n"
+            f"{rules_str}\n\n"
+            f"TABELA DE COMANDOS DISPONÍVEIS:\n{commands_table}\n\n"
+            f"{examples_str}"
+        )
+        return help_output
+
 
 class CLIController:
     """
@@ -163,6 +228,16 @@ class CLIController:
                 operator = "unknown_operator"
 
         logger = logging.getLogger("bibliomodel")
+
+        # Intercept help, -h, --help
+        if not args or "-h" in args or "--help" in args or "help" in args:
+            help_output = CLIHelpSystem.render_help(self.config_provider)
+            elapsed_ms = (time.perf_counter() - start_time) * 1000
+            logger.info(
+                f"Operator: {operator} | Command: {args} | "
+                f"Status: success | Execution resolved in {elapsed_ms:.2f}ms"
+            )
+            return help_output
         
         parser = TestableArgumentParser(
             description="BiblioModel CLI Library Loan Tracking System",
@@ -207,6 +282,9 @@ class CLIController:
 
         # 9. shell command
         subparsers.add_parser("shell")
+
+        # 10. help command
+        subparsers.add_parser("help")
 
         result_message = ""
         status = "unknown"
