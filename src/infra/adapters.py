@@ -7,7 +7,6 @@ from typing import Optional, Dict, List
 from src.app.ports import IConfigProvider, ILibraryRepository
 from src.domain.entities import BookEntity, ReaderEntity, LoanEntity, DomainError
 
-# Default configuration values
 DEFAULT_MAX_LOANS = 3
 DEFAULT_LOAN_PERIOD_DAYS = 7
 DEFAULT_DAILY_FINE_RATE = 2.00
@@ -15,7 +14,7 @@ DEFAULT_GRACE_PERIOD_DAYS = 0
 
 class INIConfigAdapter(IConfigProvider):
     """
-    Concrete adapter for loading library configurations from an INI file using configparser.
+    Adapter loading configurations from local config.ini. Fallback values are used if fields are missing/corrupted.
     """
 
     def __init__(self, file_path: str = "config.ini") -> None:
@@ -28,7 +27,6 @@ class INIConfigAdapter(IConfigProvider):
             try:
                 self._config.read(self._file_path)
             except Exception:
-                # Fall back to empty config (using defaults) in case of parsing error
                 self._config = configparser.ConfigParser()
         else:
             self._config = configparser.ConfigParser()
@@ -60,8 +58,7 @@ class INIConfigAdapter(IConfigProvider):
 
 class JSONPersistenceAdapter(ILibraryRepository):
     """
-    Outbound adapter for persisting library entities inside a local JSON file.
-    Implements ILibraryRepository interface.
+    Persists entities in a local JSON database using atomic write switches and recovery files (.bak).
     """
 
     def __init__(self, file_path: str = "db_backup.json") -> None:
@@ -73,8 +70,7 @@ class JSONPersistenceAdapter(ILibraryRepository):
 
     def clear_cache(self) -> None:
         """
-        Clears the in-memory cache and reloads data from the file path if it exists.
-        Exposed strictly for unit test lifecycle cleanup.
+        Clears memory entities and reloads from disk (mainly for testing lifecycle).
         """
         self._books.clear()
         self._readers.clear()
@@ -87,10 +83,12 @@ class JSONPersistenceAdapter(ILibraryRepository):
         self._loans = {}
 
     def _parse_and_validate(self, path: str) -> None:
+        """
+        Loads JSON database structure and hydrates objects. Validates schema format.
+        """
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        # Schema Validation
         if not isinstance(data, dict):
             raise ValueError("Root element is not a dictionary")
         for key in ("books", "readers", "loans"):
@@ -105,7 +103,6 @@ class JSONPersistenceAdapter(ILibraryRepository):
         loaded_readers: Dict[str, ReaderEntity] = {}
         loaded_loans: Dict[str, LoanEntity] = {}
 
-        # 1. Hydrate BookEntity list
         for bid, binfo in books_data.items():
             if not isinstance(binfo, dict) or "id" not in binfo or "title" not in binfo or "status" not in binfo:
                 raise ValueError(f"Invalid book schema for book: {bid}")
@@ -116,7 +113,6 @@ class JSONPersistenceAdapter(ILibraryRepository):
                 hold_queue=binfo.get("hold_queue", [])
             )
 
-        # 2. Hydrate LoanEntity list
         for lid, linfo in loans_data.items():
             if not isinstance(linfo, dict) or "id" not in linfo or "book_id" not in linfo or "reader_id" not in linfo or "checkout_date" not in linfo or "due_date" not in linfo:
                 raise ValueError(f"Invalid loan schema for loan: {lid}")
@@ -137,7 +133,6 @@ class JSONPersistenceAdapter(ILibraryRepository):
                 fine_amount=linfo.get("fine_applied", 0.0)
             )
 
-        # 3. Hydrate ReaderEntity list (referencing already hydrated LoanEntities)
         for rid, rinfo in readers_data.items():
             if not isinstance(rinfo, dict) or "id" not in rinfo or "name" not in rinfo or "status" not in rinfo:
                 raise ValueError(f"Invalid reader schema for reader: {rid}")
@@ -161,13 +156,15 @@ class JSONPersistenceAdapter(ILibraryRepository):
         self._readers = loaded_readers
 
     def _load_data(self) -> None:
+        """
+        Loads data from file path, falling back to backup self-healing logic if corrupted.
+        """
         try:
             if os.path.exists(self._file_path) and os.path.getsize(self._file_path) > 0:
                 self._parse_and_validate(self._file_path)
             else:
                 self._initialize_empty()
         except Exception as e:
-            # Fall back and try loading recovery backup file (.bak)
             bak_path = self._file_path + ".bak"
             if os.path.exists(bak_path) and os.path.getsize(bak_path) > 0:
                 logger = logging.getLogger("bibliomodel")
@@ -177,19 +174,14 @@ class JSONPersistenceAdapter(ILibraryRepository):
                 )
                 try:
                     self._parse_and_validate(bak_path)
-                    # Recovery restore: write atomically to primary path without rotating/overwriting backup
                     self._recovery_save_to_disk()
                     logger.warning("Self-healing successful. Primary database restored.")
                     return
                 except Exception as rec_err:
                     logger.error(f"Self-healing recovery failed: {rec_err}")
-            # If recovery also failed or bak does not exist, throw DomainError
             raise DomainError(f"Database file is corrupted and recovery failed: {e}")
 
     def _serialize_state(self) -> dict:
-        """
-        Helper method to serialize in-memory entities to a dictionary representation.
-        """
         books_data = {}
         for bid, book in self._books.items():
             books_data[bid] = {
@@ -229,20 +221,20 @@ class JSONPersistenceAdapter(ILibraryRepository):
         }
 
     def _save_to_disk(self) -> None:
+        """
+        Saves states to disk atomically by writing to an intermediate .tmp and swapping.
+        """
         serialized = self._serialize_state()
         tmp_path = self._file_path + ".tmp"
         bak_path = self._file_path + ".bak"
 
         try:
-            # Write atomically using intermediate .tmp file
             with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(serialized, f, indent=2)
 
-            # Move current primary to rollover .bak
             if os.path.exists(self._file_path):
                 os.replace(self._file_path, bak_path)
 
-            # Rename .tmp to primary
             os.replace(tmp_path, self._file_path)
         except Exception as e:
             if os.path.exists(tmp_path):
@@ -254,18 +246,15 @@ class JSONPersistenceAdapter(ILibraryRepository):
 
     def _recovery_save_to_disk(self) -> None:
         """
-        Recovery restore: write atomically to the primary file path
-        without rotating the corrupted file to backup.
+        Swaps backup to primary atomically during self-healing (avoids touching backup file).
         """
         serialized = self._serialize_state()
         tmp_path = self._file_path + ".tmp"
 
         try:
-            # Write to .tmp file
             with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(serialized, f, indent=2)
 
-            # Atomic swap directly over primary file
             os.replace(tmp_path, self._file_path)
         except Exception as e:
             if os.path.exists(tmp_path):
@@ -275,8 +264,6 @@ class JSONPersistenceAdapter(ILibraryRepository):
                     pass
             raise DomainError(f"Recovery state write failed: {e}")
 
-
-    # ILibraryRepository port implementations
     def get_book(self, book_id: str) -> Optional[BookEntity]:
         return self._books.get(book_id)
 
@@ -311,32 +298,26 @@ class JSONPersistenceAdapter(ILibraryRepository):
         return list(self._loans.values())
 
 
-
 def setup_logger(log_file: str = "bibliomodel.log") -> logging.Logger:
     """
-    Initializes and configures the system logger.
-    Logs are written to both the console and a local file.
+    Initializes system logger, forwarding metrics and operations to files and stdout stream.
     """
     logger = logging.getLogger("bibliomodel")
     logger.setLevel(logging.INFO)
 
-    # Avoid duplicate handlers if setup is called multiple times
     if not logger.handlers:
         formatter = logging.Formatter(
             "[%(asctime)s] [%(levelname)s] %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S"
         )
 
-        # File Handler
         try:
             file_handler = logging.FileHandler(log_file, encoding="utf-8")
             file_handler.setFormatter(formatter)
             logger.addHandler(file_handler)
         except Exception as e:
-            # Fallback to sys.stderr if log file cannot be written
             print(f"Warning: Could not configure file logger: {e}")
 
-        # Console Handler
         console_handler = logging.StreamHandler()
         console_handler.setFormatter(formatter)
         logger.addHandler(console_handler)

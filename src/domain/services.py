@@ -3,7 +3,7 @@ from datetime import date
 
 class FineCalculator:
     """
-    Domain service for calculating fines on returned books.
+    Stateless domain service for calculating late return fines based on rules.
     """
 
     def calculate_fine(
@@ -14,9 +14,7 @@ class FineCalculator:
         grace_period_days: int
     ) -> float:
         """
-        Calculates the late fee fine based on return date and grace period.
-        If the grace period is exceeded, the fine is calculated over the entire
-        duration of the delay (no deduction of the grace period days).
+        Calculates fines. If grace period is exceeded, fine is calculated from due date (no grace deduction).
         """
         late_days = (return_date - due_date).days
         if late_days <= 0:

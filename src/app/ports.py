@@ -5,169 +5,168 @@ from src.domain.entities import BookEntity, ReaderEntity, LoanEntity
 
 class IConfigProvider(ABC):
     """
-    Port defining configuration retrieval methods for the library business rules.
+    Interface/Port defining dynamic library business rules configurations.
     """
 
     @abstractmethod
     def get_max_loans(self) -> int:
         """
-        Returns the maximum number of books a reader can borrow at the same time.
+        Max concurrent books a reader can borrow.
         """
         pass
 
     @abstractmethod
     def get_loan_period_days(self) -> int:
         """
-        Returns the default loan duration in days.
+        Default duration of a loan.
         """
         pass
 
     @abstractmethod
     def get_daily_fine_rate(self) -> float:
         """
-        Returns the daily fine rate amount for overdue books.
+        Late fee rate per day.
         """
         pass
 
     @abstractmethod
     def get_grace_period_days(self) -> int:
         """
-        Returns the grace period in days before fines start accumulating.
+        Grace period before fines accumulate.
         """
         pass
 
 
 class ILibraryRepository(ABC):
     """
-    Outbound port defining database/persistence operations for library entities.
+    Outbound port defining persistence operations for library entities.
     """
 
     @abstractmethod
     def get_book(self, book_id: str) -> Optional[BookEntity]:
         """
-        Retrieves a book by its unique ID.
+        Retrieve a book by ID.
         """
         pass
 
     @abstractmethod
     def save_book(self, book: BookEntity) -> None:
         """
-        Saves or updates a book's state in the repository.
+        Save or update book state.
         """
         pass
 
     @abstractmethod
     def get_reader(self, reader_id: str) -> Optional[ReaderEntity]:
         """
-        Retrieves a reader by their unique ID.
+        Retrieve a reader by ID.
         """
         pass
 
     @abstractmethod
     def save_reader(self, reader: ReaderEntity) -> None:
         """
-        Saves or updates a reader's state in the repository.
+        Save or update reader state.
         """
         pass
 
     @abstractmethod
     def save_loan(self, loan: LoanEntity) -> None:
         """
-        Saves or updates a loan transaction in the repository.
+        Save or update loan transaction.
         """
         pass
 
     @abstractmethod
     def get_active_loan_by_book(self, book_id: str) -> Optional[LoanEntity]:
         """
-        Retrieves the single active loan associated with the book (where return_date is None).
+        Retrieve active loan for book (where return_date is None).
         """
         pass
 
     @abstractmethod
     def list_books(self) -> List[BookEntity]:
         """
-        Retrieves all books in the repository.
+        List all books.
         """
         pass
 
     @abstractmethod
     def list_readers(self) -> List[ReaderEntity]:
         """
-        Retrieves all readers in the repository.
+        List all readers.
         """
         pass
 
     @abstractmethod
     def list_loans(self) -> List[LoanEntity]:
         """
-        Retrieves all loans in the repository.
+        List all loans.
         """
         pass
 
 
-
 class ICheckoutUseCase(ABC):
     """
-    Inbound port defining the checkout/loan execution use case.
+    Inbound port for the book loan use case.
     """
 
     @abstractmethod
     def execute(self, reader_id: str, book_id: str, checkout_date: date) -> LoanEntity:
         """
-        Executes the book loan process for a given reader.
+        Execute loan process.
         """
         pass
 
 
 class IReturnUseCase(ABC):
     """
-    Inbound port defining the book return execution use case.
+    Inbound port for the book return use case.
     """
 
     @abstractmethod
     def execute(self, book_id: str, return_date: date) -> LoanEntity:
         """
-        Executes the book return process.
+        Execute return process.
         """
         pass
 
 
 class IReserveUseCase(ABC):
     """
-    Inbound port defining the book reservation execution use case.
+    Inbound port for the book reservation use case.
     """
 
     @abstractmethod
     def execute(self, reader_id: str, book_id: str) -> BookEntity:
         """
-        Executes the book reservation process.
+        Execute reservation process.
         """
         pass
 
 
 class IWaiveFineUseCase(ABC):
     """
-    Inbound port defining the fine waiving execution use case.
+    Inbound port for waiving reader fines.
     """
 
     @abstractmethod
     def execute(self, reader_id: str) -> ReaderEntity:
         """
-        Executes the fine waiving process for a given reader.
+        Execute fine waiving process.
         """
         pass
 
 
 class IGenerateReportUseCase(ABC):
     """
-    Inbound port defining the report generation use case.
+    Inbound port for status report generation.
     """
 
     @abstractmethod
     def execute(self) -> dict:
         """
-        Compiles active loans, overdue statuses, fines, and queue stats.
+        Compile daily status report statistics.
         """
         pass
 
