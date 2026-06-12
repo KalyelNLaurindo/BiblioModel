@@ -1,4 +1,8 @@
 import argparse
+import time
+import logging
+import os
+import getpass
 from datetime import date
 from typing import List, Optional
 from src.app.ports import ILibraryRepository, IConfigProvider
@@ -19,6 +23,31 @@ class TestableArgumentParser(argparse.ArgumentParser):
         if message:
             raise ValueError(message)
         raise ValueError(f"ArgumentParser exited with status {status}")
+
+
+class CLIFormatter:
+    """
+    Format output messages with color-coded Unicode badges for enhanced UX.
+    """
+    @staticmethod
+    def format_ok(message: str) -> str:
+        # Green [OK]
+        return f"🟢 \033[92m[OK]\033[0m {message}"
+
+    @staticmethod
+    def format_warn(message: str) -> str:
+        # Yellow [WARN]
+        return f"🟡 \033[93m[WARN]\033[0m {message}"
+
+    @staticmethod
+    def format_error(message: str) -> str:
+        # Red [ERROR]
+        return f"🔴 \033[91m[ERROR]\033[0m {message}"
+
+    @staticmethod
+    def format_hold(message: str) -> str:
+        # Blue [HOLD]
+        return f"🔵 \033[94m[HOLD]\033[0m {message}"
 
 
 class CLIController:
@@ -43,6 +72,19 @@ class CLIController:
         Parses command arguments and executes the requested operation.
         Returns a formatted output string containing success validations or errors.
         """
+        start_time = time.perf_counter()
+        
+        # Determine operator context
+        try:
+            operator = os.getlogin()
+        except Exception:
+            try:
+                operator = getpass.getuser()
+            except Exception:
+                operator = "unknown_operator"
+
+        logger = logging.getLogger("bibliomodel")
+        
         parser = TestableArgumentParser(
             description="BiblioModel CLI Library Loan Tracking System",
             prog="bibliomodel"
@@ -69,26 +111,38 @@ class CLIController:
         # 4. report command
         subparsers.add_parser("report")
 
-        try:
-            parsed_args = parser.parse_args(args)
-        except (argparse.ArgumentError, ValueError) as err:
-            return f"Error parsing arguments: {str(err)}"
+        result_message = ""
+        status = "unknown"
 
         try:
+            try:
+                parsed_args = parser.parse_args(args)
+            except (argparse.ArgumentError, ValueError) as err:
+                status = "parse_error"
+                result_message = CLIFormatter.format_error(f"Error parsing arguments: {str(err)}")
+                return result_message
+
             if parsed_args.command == "loan":
                 loan_date = date.today()
                 if parsed_args.date:
                     try:
                         loan_date = date.fromisoformat(parsed_args.date)
                     except ValueError:
-                        return f"Error parsing arguments: Invalid date format: '{parsed_args.date}'. Expected YYYY-MM-DD."
+                        status = "parse_error"
+                        result_message = CLIFormatter.format_error(
+                            f"Error parsing arguments: Invalid date format: '{parsed_args.date}'. Expected YYYY-MM-DD."
+                        )
+                        return result_message
                 
                 loan = self.checkout_use_case.execute(
                     reader_id=parsed_args.reader,
                     book_id=parsed_args.book,
                     checkout_date=loan_date
                 )
-                return f"Success: Book '{parsed_args.book}' loaned to Reader '{parsed_args.reader}' until {loan.due_date.isoformat()}."
+                status = "success"
+                result_message = CLIFormatter.format_ok(
+                    f"Success: Book '{parsed_args.book}' loaned to Reader '{parsed_args.reader}' until {loan.due_date.isoformat()}."
+                )
 
             elif parsed_args.command == "return":
                 return_date = date.today()
@@ -96,33 +150,54 @@ class CLIController:
                     try:
                         return_date = date.fromisoformat(parsed_args.date)
                     except ValueError:
-                        return f"Error parsing arguments: Invalid date format: '{parsed_args.date}'. Expected YYYY-MM-DD."
+                        status = "parse_error"
+                        result_message = CLIFormatter.format_error(
+                            f"Error parsing arguments: Invalid date format: '{parsed_args.date}'. Expected YYYY-MM-DD."
+                        )
+                        return result_message
                 
                 loan = self.return_use_case.execute(
                     book_id=parsed_args.book,
                     return_date=return_date
                 )
                 
+                status = "success"
                 msg = f"Success: Book '{parsed_args.book}' returned."
                 if loan.fine_amount > 0:
                     msg += f" Late return fine: ${loan.fine_amount:.2f}."
-                return msg
+                    result_message = CLIFormatter.format_warn(msg)
+                else:
+                    result_message = CLIFormatter.format_ok(msg)
 
             elif parsed_args.command == "reserve":
                 self.reserve_use_case.execute(
                     reader_id=parsed_args.reader,
                     book_id=parsed_args.book
                 )
-                return f"Success: Book '{parsed_args.book}' reserved for Reader '{parsed_args.reader}'."
+                status = "success"
+                result_message = CLIFormatter.format_hold(
+                    f"Success: Book '{parsed_args.book}' reserved for Reader '{parsed_args.reader}'."
+                )
 
             elif parsed_args.command == "report":
-                # Basic placeholder report implementation, to be expanded in TSK-13
-                return "Success: Basic library state report generated."
+                status = "success"
+                result_message = CLIFormatter.format_ok("Success: Basic library state report generated.")
 
             else:
-                return "Unknown command"
+                status = "unknown_command"
+                result_message = CLIFormatter.format_error("Unknown command")
 
         except DomainError as de:
-            return f"Business Rule Error: {str(de)}"
+            status = "domain_error"
+            result_message = CLIFormatter.format_error(f"Business Rule Error: {str(de)}")
         except Exception as e:
-            return f"System Error: {str(e)}"
+            status = "system_error"
+            result_message = CLIFormatter.format_error(f"System Error: {str(e)}")
+        finally:
+            elapsed_ms = (time.perf_counter() - start_time) * 1000
+            logger.info(
+                f"Operator: {operator} | Command: {args} | "
+                f"Status: {status} | Execution resolved in {elapsed_ms:.2f}ms"
+            )
+
+        return result_message

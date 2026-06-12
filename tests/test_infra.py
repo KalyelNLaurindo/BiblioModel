@@ -83,7 +83,7 @@ def test_cli_controller_loan_success() -> None:
     
     # Run loan command with explicit date
     res = controller.execute(["loan", "--reader", "R1", "--book", "B1", "--date", "2026-06-12"])
-    assert "Success" in res
+    assert "[OK]" in res
     assert "loaned" in res
     assert "R1" in res
     assert "B1" in res
@@ -99,7 +99,8 @@ def test_cli_controller_loan_missing_args() -> None:
     controller = CLIController(repo, config)
     
     res = controller.execute(["loan", "--reader", "R1"])
-    assert "Error parsing arguments" in res
+    assert "[ERROR]" in res
+    assert "parsing" in res.lower()
 
 def test_cli_controller_loan_invalid_date() -> None:
     from src.infra.cli import CLIController
@@ -112,7 +113,8 @@ def test_cli_controller_loan_invalid_date() -> None:
     
     controller = CLIController(repo, config)
     res = controller.execute(["loan", "--reader", "R1", "--book", "B1", "--date", "invalid-date"])
-    assert "Error" in res or "invalid" in res or "Business Rule" in res or "System Error" in res
+    assert "[ERROR]" in res
+    assert "date format" in res.lower()
 
 def test_cli_controller_loan_domain_error() -> None:
     from src.infra.cli import CLIController
@@ -122,8 +124,8 @@ def test_cli_controller_loan_domain_error() -> None:
     
     # Reader not found
     res = controller.execute(["loan", "--reader", "R999", "--book", "B1"])
-    assert "Business Rule Error" in res
-    assert "Reader not found" in res
+    assert "[ERROR]" in res
+    assert "reader not found" in res.lower()
 
 def test_cli_controller_return_success_and_fines() -> None:
     from src.infra.cli import CLIController
@@ -142,9 +144,9 @@ def test_cli_controller_return_success_and_fines() -> None:
     
     controller = CLIController(repo, config)
     
-    # Return 3 days late (due on 8th, returned on 11th) -> $6 fine
+    # Return 3 days late (due on 8th, returned on 11th) -> $6 fine -> warning badge
     res = controller.execute(["return", "--book", "B1", "--date", "2026-06-11"])
-    assert "Success" in res
+    assert "[WARN]" in res
     assert "returned" in res
     assert "fine: $6.00" in res
     
@@ -165,7 +167,7 @@ def test_cli_controller_reserve_success() -> None:
     
     controller = CLIController(repo, config)
     res = controller.execute(["reserve", "--reader", "R1", "--book", "B1"])
-    assert "Success" in res
+    assert "[HOLD]" in res
     assert "reserved" in res
     
     assert book.status == "Reserved"
@@ -177,6 +179,28 @@ def test_cli_controller_report_success() -> None:
     config = FakeConfigProvider()
     controller = CLIController(repo, config)
     res = controller.execute(["report"])
-    assert "Success" in res
+    assert "[OK]" in res
+
+def test_cli_controller_telemetry_logging(caplog) -> None:
+    from src.infra.cli import CLIController
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    
+    book = BookEntity("B1", "DDD Book")
+    reader = ReaderEntity("R1", "Alice")
+    repo.save_book(book)
+    repo.save_reader(reader)
+    
+    controller = CLIController(repo, config)
+    
+    caplog.clear()
+    res = controller.execute(["loan", "--reader", "R1", "--book", "B1"])
+        
+    # Check that execution time and operator were logged under INFO level
+    info_logs = [record.message for record in caplog.records if record.levelname == "INFO"]
+    assert any("resolved in" in log or "execution" in log.lower() for log in info_logs)
+    assert any("operator" in log.lower() for log in info_logs)
+
+
 
 
