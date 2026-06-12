@@ -1,8 +1,8 @@
 import uuid
 from datetime import date, timedelta
-from src.domain.entities import LoanEntity, DomainError
+from src.domain.entities import LoanEntity, BookEntity, DomainError
 from src.domain.services import FineCalculator
-from src.app.ports import ILibraryRepository, IConfigProvider, ICheckoutUseCase, IReturnUseCase
+from src.app.ports import ILibraryRepository, IConfigProvider, ICheckoutUseCase, IReturnUseCase, IReserveUseCase
 
 class CheckoutUseCase(ICheckoutUseCase):
     """
@@ -140,3 +140,53 @@ class ReturnUseCase(IReturnUseCase):
         self.repository.save_loan(loan)
 
         return loan
+
+
+class ReserveUseCase(IReserveUseCase):
+    """
+    Coordinates domain objects to execute book reservations.
+    Implements IReserveUseCase port.
+    """
+
+    def __init__(self, repository: ILibraryRepository) -> None:
+        """
+        Initializes the use case with required repository.
+        """
+        self.repository = repository
+
+    def execute(self, reader_id: str, book_id: str) -> BookEntity:
+        """
+        Executes the reservation of a book for a given reader.
+        Ensures book is not available (must be checked out),
+        reader doesn't already hold the book, and reader hasn't already reserved it.
+        """
+        # Retrieve book from repository
+        book = self.repository.get_book(book_id)
+        if not book:
+            raise DomainError("Book not found")
+
+        # Retrieve reader
+        reader = self.repository.get_reader(reader_id)
+        if not reader:
+            raise DomainError("Reader not found")
+
+        # Validate book status (only currently unavailable/loaned/reserved books can be reserved)
+        if book.status == "Available":
+            raise DomainError("Book is available and can be checked out directly")
+
+        # Verify if the reader is the current active borrower of this book
+        active_loan = self.repository.get_active_loan_by_book(book_id)
+        if active_loan and active_loan.reader_id == reader_id:
+            raise DomainError("Reader cannot reserve a book they currently hold")
+
+        # Verify if reader already reserved this book (redundant reservation hold)
+        if reader_id in book.hold_queue:
+            raise DomainError("Reader has already reserved this book")
+
+        # Perform reservation on domain model
+        book.reserve(reader_id)
+
+        # Save states
+        self.repository.save_book(book)
+
+        return book

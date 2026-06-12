@@ -111,3 +111,17 @@ class IReturnUseCase(ABC):
         pass
 
 
+class IReserveUseCase(ABC):
+    """
+    Inbound port defining the book reservation execution use case.
+    """
+
+    @abstractmethod
+    def execute(self, reader_id: str, book_id: str) -> BookEntity:
+        """
+        Executes the book reservation process.
+        """
+        pass
+
+
+

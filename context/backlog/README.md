@@ -77,7 +77,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-07](TSK-07.md)]: Create Application Use Case - ReserveUseCase**  
   * *Epic Link:* FT-03 (Use Case Interactors)  
   * *RICE Score:* 80.0 (Medium Priority / Should Have) | Reach: 80 / Impact: 3 / Confidence: 1.0 / Effort: 3  
-  * *Status:* To Do  
+  * *Status:* Done  
 
 ### **💾 Phase 4: Infrastructure - Persistence & Data Safety**
 
@@ -134,7 +134,6 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🔴 To Do (Ready for Development)**
 
-* [ ] **[[TSK-07](TSK-07.md)]:** Create Application Use Case - ReserveUseCase
 * [ ] **[[TSK-08](TSK-08.md)]:** Develop JSONPersistenceAdapter & Atomic Write Protocol
 * [ ] **[[TSK-12](TSK-12.md)]:** Implement Self-Healing Schema Recovery and Disaster Recovery DRP Suite
 * [ ] **[[TSK-09](TSK-09.md)]:** Build CLI Parser and Command Arguments Router
@@ -163,3 +162,4 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-04](TSK-04.md)]:** Develop Domain Services - FineCalculator Engine
 * [x] **[[TSK-05](TSK-05.md)]:** Create Application Use Case - CheckoutUseCase
 * [x] **[[TSK-06](TSK-06.md)]:** Create Application Use Case - ReturnUseCase
+* [x] **[[TSK-07](TSK-07.md)]:** Create Application Use Case - ReserveUseCase
