@@ -1,3 +1,7 @@
+from datetime import date
+from typing import Optional, List
+
+
 class DomainError(Exception):
     """
     Custom exception raised for violations of domain invariants and rules.
@@ -60,3 +64,98 @@ class BookEntity:
             self.status = "Reserved"
         else:
             self.status = "Available"
+
+
+class LoanEntity:
+    """
+    Represents a loan transaction of a physical book by a reader.
+    """
+
+    def __init__(
+        self,
+        loan_id: str,
+        book_id: str,
+        reader_id: str,
+        checkout_date: date,
+        due_date: date,
+        return_date: Optional[date] = None,
+        fine_amount: float = 0.0
+    ) -> None:
+        self.loan_id = loan_id
+        self.book_id = book_id
+        self.reader_id = reader_id
+        self.checkout_date = checkout_date
+        self.due_date = due_date
+        self.return_date = return_date
+        self.fine_amount = fine_amount
+
+    def is_overdue(self, current_date: date) -> bool:
+        """
+        Checks if the loan is overdue relative to a target date.
+        """
+        if self.return_date is not None:
+            return False
+        return current_date > self.due_date
+
+
+class ReaderEntity:
+    """
+    Represents a library patron / reader.
+    Controls borrower eligibility based on late returns and unpaid fines.
+    """
+
+    def __init__(
+        self,
+        reader_id: str,
+        name: str,
+        status: str = "Active",
+        fine_balance: float = 0.0,
+        active_loans: Optional[List[LoanEntity]] = None
+    ) -> None:
+        self.reader_id = reader_id
+        self.name = name
+        self.status = status
+        self.fine_balance = fine_balance
+        self.active_loans = active_loans if active_loans is not None else []
+
+    def add_loan(self, loan: LoanEntity) -> None:
+        """
+        Adds a new active loan to the reader.
+        """
+        self.active_loans.append(loan)
+
+    def return_loan(self, book_id: str, return_date: date) -> None:
+        """
+        Returns a loaned book and removes it from active loans.
+        """
+        for loan in self.active_loans:
+            if loan.book_id == book_id and loan.return_date is None:
+                loan.return_date = return_date
+                self.active_loans.remove(loan)
+                break
+
+    def apply_fine(self, amount: float) -> None:
+        """
+        Applies a monetary fine to the reader.
+        """
+        self.fine_balance += amount
+
+    def pay_fine(self, amount: float) -> None:
+        """
+        Pays off/reduces the reader's fine balance.
+        """
+        self.fine_balance -= amount
+        if self.fine_balance < 0.0:
+            self.fine_balance = 0.0
+
+    def update_status(self, current_date: date) -> None:
+        """
+        Transitions the reader's status to Suspended if they have unpaid fines
+        or overdue loans. Restores Active status otherwise.
+        """
+        has_overdue = any(loan.is_overdue(current_date) for loan in self.active_loans)
+        if self.fine_balance > 0.0 or has_overdue:
+            self.status = "Suspended"
+        else:
+            self.status = "Active"
+
