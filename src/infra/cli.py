@@ -49,6 +49,82 @@ class CLIFormatter:
         # Blue [HOLD]
         return f"🔵 \033[94m[HOLD]\033[0m {message}"
 
+    @staticmethod
+    def render_table(headers: List[str], rows: List[List[str]], max_col_width: int = 35) -> str:
+        """
+        Renders a collection of data rows wrapped in clean ASCII box frames
+        using single-line box drawing characters. Fits content dynamically
+        and trims cells exceeding max_col_width to prevent wrapping bugs.
+        """
+        # Sanitize headers and cells (convert to strings, trim if too long)
+        sanitized_headers = []
+        for h in headers:
+            s_h = str(h)
+            if len(s_h) > max_col_width:
+                s_h = s_h[:max_col_width - 3] + "..."
+            sanitized_headers.append(s_h)
+
+        sanitized_rows = []
+        for row in rows:
+            sanitized_row = []
+            for cell in row:
+                s_cell = str(cell)
+                if len(s_cell) > max_col_width:
+                    s_cell = s_cell[:max_col_width - 3] + "..."
+                sanitized_row.append(s_cell)
+            sanitized_rows.append(sanitized_row)
+
+        # Compute column widths
+        col_widths = [len(h) for h in sanitized_headers]
+        for row in sanitized_rows:
+            for i, cell in enumerate(row):
+                if i < len(col_widths):
+                    col_widths[i] = max(col_widths[i], len(cell))
+                else:
+                    col_widths.append(len(cell))
+
+        # Build top border
+        top_border = "┌" + "┬".join("─" * (w + 2) for w in col_widths) + "┐\n"
+        
+        # Build header row
+        header_row = "│" + "│".join(f" {h.ljust(w)} " for h, w in zip(sanitized_headers, col_widths)) + "│"
+        
+        # Build header separator
+        header_sep = "\n├" + "┼".join("─" * (w + 2) for w in col_widths) + "┤"
+        
+        # Build row contents and middle separators
+        row_strings = []
+        for row in sanitized_rows:
+            padded_row = row + [""] * (len(col_widths) - len(row))
+            row_str = "│" + "│".join(f" {cell.ljust(w)} " for cell, w in zip(padded_row, col_widths)) + "│"
+            row_strings.append(row_str)
+
+        row_sep = "\n├" + "┼".join("─" * (w + 2) for w in col_widths) + "┤\n"
+        rows_section = row_sep.join(row_strings)
+        
+        # Bottom
+        bottom_sep = "\n└" + "┴".join("─" * (w + 2) for w in col_widths) + "┘"
+
+        table_str = top_border + header_row + header_sep
+        if rows_section:
+            table_str += "\n" + rows_section
+        table_str += bottom_sep
+        return table_str
+
+    @staticmethod
+    def get_welcome_banner() -> str:
+        """
+        Returns a formatted welcome banner for CLI startup.
+        """
+        banner = (
+            "╔════════════════════════════════════════════════════════════════╗\n"
+            "║                       BIBLIOMODEL CLI                          ║\n"
+            "║            Library Loan Tracking & Business Rules              ║\n"
+            "╚════════════════════════════════════════════════════════════════╝"
+        )
+        return banner
+
+
 
 class CLIController:
     """
@@ -120,8 +196,18 @@ class CLIController:
         waive_parser.add_argument("--operator", help="Name of the operator waiving the fine")
         waive_parser.add_argument("--reason", help="Reason for waiving the fine")
 
+        # 6. list-books command
+        subparsers.add_parser("list-books")
+
+        # 7. list-readers command
+        subparsers.add_parser("list-readers")
+
+        # 8. list-loans command
+        subparsers.add_parser("list-loans")
+
         result_message = ""
         status = "unknown"
+
 
 
         try:
@@ -205,12 +291,25 @@ class CLIController:
                     "========================================\n"
                 )
                 
+                # Generate visual table representation
+                report_headers = ["Metric", "Value"]
+                report_rows = [
+                    ["Total Active Loans", str(report_data['total_active_loans'])],
+                    ["Overdue Loans", str(report_data['total_overdue'])],
+                    ["Total Unpaid Fees", f"${report_data['total_unpaid_fees']:.2f}"],
+                    ["Reserved Books Count", str(report_data['reserved_books_count'])],
+                    ["Total Hold Queue Size", str(report_data['total_reservations'])]
+                ]
+                report_table = CLIFormatter.render_table(report_headers, report_rows)
+                
                 report_file = "daily_handover_report.txt"
                 try:
                     with open(report_file, "w", encoding="utf-8") as f:
                         f.write(report_content)
                     status = "success"
-                    result_message = CLIFormatter.format_ok(f"Success: {report_file} generated.")
+                    result_message = CLIFormatter.format_ok(
+                        f"Success: {report_file} generated.\n{report_table}"
+                    )
                 except Exception as write_err:
                     status = "system_error"
                     result_message = CLIFormatter.format_error(f"Failed to write report file: {write_err}")
@@ -229,6 +328,57 @@ class CLIController:
                     f"due to: '{parsed_args.reason}'"
                 )
                 result_message = CLIFormatter.format_ok(f"Success: Fine waived for Reader '{parsed_args.reader}'.")
+
+            elif parsed_args.command == "list-books":
+                books = self.repository.list_books()
+                headers = ["Book ID", "Title", "Status", "Hold Queue"]
+                rows = []
+                for b in books:
+                    rows.append([
+                        b.book_id,
+                        b.title,
+                        b.status,
+                        ", ".join(b.hold_queue) if b.hold_queue else "None"
+                    ])
+                table = CLIFormatter.render_table(headers, rows)
+                status = "success"
+                result_message = table
+
+            elif parsed_args.command == "list-readers":
+                readers = self.repository.list_readers()
+                headers = ["Reader ID", "Name", "Status", "Fine Balance", "Active Loans"]
+                rows = []
+                for r in readers:
+                    active_loan_ids = [loan.loan_id for loan in r.active_loans]
+                    rows.append([
+                        r.reader_id,
+                        r.name,
+                        r.status,
+                        f"${r.fine_balance:.2f}",
+                        ", ".join(active_loan_ids) if active_loan_ids else "None"
+                    ])
+                table = CLIFormatter.render_table(headers, rows)
+                status = "success"
+                result_message = table
+
+            elif parsed_args.command == "list-loans":
+                loans = self.repository.list_loans()
+                headers = ["Loan ID", "Book ID", "Reader ID", "Checkout Date", "Due Date", "Return Date", "Fine"]
+                rows = []
+                for l in loans:
+                    rows.append([
+                        l.loan_id,
+                        l.book_id,
+                        l.reader_id,
+                        l.checkout_date.isoformat(),
+                        l.due_date.isoformat(),
+                        l.return_date.isoformat() if l.return_date else "Active",
+                        f"${l.fine_amount:.2f}"
+                    ])
+                table = CLIFormatter.render_table(headers, rows)
+                status = "success"
+                result_message = table
+
 
 
             else:
