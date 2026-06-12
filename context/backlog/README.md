@@ -107,7 +107,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-14](TSK-14.md)]: Implement Semi-Visual Terminal Table Renderer and Welcome Interface**  
   * *Epic Link:* FT-05 (CLI & Alerts Router)  
   * *RICE Score:* 150.0 (High Priority / Must Have) | Reach: 100 / Impact: 3 / Confidence: 1.0 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 * **[[TSK-15](TSK-15.md)]: Implement Interactive CLI Prompt Shell**  
   * *Epic Link:* FT-05 (CLI & Alerts Router)  
   * *RICE Score:* 100.0 (High Priority / Must Have) | Reach: 100 / Impact: 3 / Confidence: 1.0 / Effort: 3  
@@ -134,7 +134,6 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🔴 To Do (Ready for Development)**
 
-* [ ] **[[TSK-14](TSK-14.md)]:** Implement Semi-Visual Terminal Table Renderer and Welcome Interface
 * [ ] **[[TSK-15](TSK-15.md)]:** Implement Interactive CLI Prompt Shell
 * [ ] **[[TSK-16](TSK-16.md)]:** Implement Built-in Help Menu & Documentation System
 * [ ] **[[TSK-17](TSK-17.md)]:** Malicious Input Validation and Shell Hardening
@@ -163,6 +162,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-09](TSK-09.md)]:** Build CLI Parser and Command Arguments Router
 * [x] **[[TSK-10](TSK-10.md)]:** Integrate Telemetry and Unicode CLI Console Badges
 * [x] **[[TSK-13](TSK-13.md)]:** Implement Handover Report Exporter and Operator Logs
+* [x] **[[TSK-14](TSK-14.md)]:** Implement Semi-Visual Terminal Table Renderer and Welcome Interface
 
 
 
