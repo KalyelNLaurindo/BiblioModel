@@ -10,12 +10,13 @@ Construct a boot-time database validation and automatic recovery system in `src/
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] Outbound repository adapters are functional.
-* [ ] Atomic write replace loops are implemented.
+* [x] Outbound repository adapters are functional.
+* [x] Atomic write replace loops are implemented.
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Criterion 1 (Functional):** The bootloader auto-heals corrupted JSON database states by rolling back to `.bak` files when standard parsing fails.
-* [ ] **Criterion 2 (Quality/Test):** Integration tests in `tests/test_persistence.py` simulate structural file corruption and assert that data is successfully recovered from the backup.
-* [ ] **Criterion 3 (Security/Resilience):** Warning console logs alert the operator when recovery is triggered.
-* [ ] **Criterion 4 (Review):** Implements atomic swaps during the recovery phase to prevent nested write crashes.
+* [x] **Criterion 1 (Functional):** The bootloader auto-heals corrupted JSON database states by rolling back to `.bak` files when standard parsing fails.
+* [x] **Criterion 2 (Quality/Test):** Integration tests in `tests/test_persistence.py` simulate structural file corruption and assert that data is successfully recovered from the backup.
+* [x] **Criterion 3 (Security/Resilience):** Warning console logs alert the operator when recovery is triggered.
+* [x] **Criterion 4 (Review):** Implements atomic swaps during the recovery phase to prevent nested write crashes.
+

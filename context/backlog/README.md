@@ -88,7 +88,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-12](TSK-12.md)]: Implement Self-Healing Schema Recovery and Disaster Recovery DRP Suite**  
   * *Epic Link:* FT-04 (Repository Ports & Safe Adapter)  
   * *RICE Score:* 90.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 1.0 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 
 ### **💻 Phase 5: Client Interface (CLI Router, Layout & Logs)**
 
@@ -134,7 +134,6 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🔴 To Do (Ready for Development)**
 
-* [ ] **[[TSK-12](TSK-12.md)]:** Implement Self-Healing Schema Recovery and Disaster Recovery DRP Suite
 * [ ] **[[TSK-09](TSK-09.md)]:** Build CLI Parser and Command Arguments Router
 * [ ] **[[TSK-10](TSK-10.md)]:** Integrate Telemetry and Unicode CLI Console Badges
 * [ ] **[[TSK-13](TSK-13.md)]:** Implement Handover Report Exporter and Operator Logs
@@ -163,3 +162,5 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-06](TSK-06.md)]:** Create Application Use Case - ReturnUseCase
 * [x] **[[TSK-07](TSK-07.md)]:** Create Application Use Case - ReserveUseCase
 * [x] **[[TSK-08](TSK-08.md)]:** Develop JSONPersistenceAdapter & Atomic Write Protocol
+* [x] **[[TSK-12](TSK-12.md)]:** Implement Self-Healing Schema Recovery and Disaster Recovery DRP Suite
+
