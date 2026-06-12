@@ -315,6 +315,85 @@ def test_cli_controller_report_export() -> None:
             os.remove(report_file)
 
 
+def test_cli_formatter_render_table() -> None:
+    from src.infra.cli import CLIFormatter
+    headers = ["ID", "Name"]
+    rows = [["1", "Alice"], ["2", "Bob"]]
+    table = CLIFormatter.render_table(headers, rows)
+    
+    # Check box drawing characters are present
+    assert "┌" in table
+    assert "┐" in table
+    assert "┬" in table
+    assert "│" in table
+    assert "├" in table
+    assert "┼" in table
+    assert "┤" in table
+    assert "└" in table
+    assert "┘" in table
+    assert "┴" in table
+    
+    # Check data is inside
+    assert "Alice" in table
+    assert "Bob" in table
+
+def test_cli_formatter_long_string_truncation() -> None:
+    from src.infra.cli import CLIFormatter
+    headers = ["Description"]
+    rows = [["This is a very long description that must be truncated"]]
+    table = CLIFormatter.render_table(headers, rows, max_col_width=15)
+    
+    assert "..." in table
+    # Check column length limit: col width is 15. Pad is 2 (spaces on both sides) -> cell max length is 17.
+    # We check that none of the lines exceed a reasonable terminal limit.
+    for line in table.split("\n"):
+        assert len(line) <= 25 # line is │ cell │ -> width is 15 + 2 + 2 = 19.
+
+def test_cli_formatter_welcome_banner() -> None:
+    from src.infra.cli import CLIFormatter
+    banner = CLIFormatter.get_welcome_banner()
+    assert "╔" in banner
+    assert "═" in banner
+    assert "╗" in banner
+    assert "║" in banner
+    assert "╚" in banner
+    assert "╝" in banner
+    assert "BIBLIOMODEL" in banner
+
+def test_cli_list_commands() -> None:
+    from src.infra.cli import CLIController
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    
+    book = BookEntity("B1", "DDD Book")
+    reader = ReaderEntity("R1", "Alice")
+    loan = LoanEntity("L1", "B1", "R1", date(2026, 6, 10), date(2026, 6, 17))
+    reader.add_loan(loan)
+    
+    repo.save_book(book)
+    repo.save_reader(reader)
+    repo.save_loan(loan)
+    
+    controller = CLIController(repo, config)
+    
+    res_books = controller.execute(["list-books"])
+    assert "B1" in res_books
+    assert "DDD Book" in res_books
+    assert "┌" in res_books
+    
+    res_readers = controller.execute(["list-readers"])
+    assert "R1" in res_readers
+    assert "Alice" in res_readers
+    assert "┌" in res_readers
+    
+    res_loans = controller.execute(["list-loans"])
+    assert "L1" in res_loans
+    assert "B1" in res_loans
+    assert "R1" in res_loans
+    assert "┌" in res_loans
+
+
+
 
 
 
