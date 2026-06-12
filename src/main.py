@@ -5,6 +5,9 @@ from src.infra.cli import CLIController, CLIFormatter
 from src.domain.entities import DomainError
 
 def main() -> None:
+    """
+    Bootstrap entrypoint. Configures UTF-8 terminal encoding, setups logger, config provider, persistence, and executes CLIController.
+    """
     try:
         sys.stdout.reconfigure(encoding='utf-8')
     except Exception:

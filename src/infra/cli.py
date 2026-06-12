@@ -12,10 +12,7 @@ from src.app.validators import InputValidator
 
 class TestableArgumentParser(argparse.ArgumentParser):
     """
-    Subclass of argparse.ArgumentParser that overrides error and exit methods
-    to raise exceptions instead of printing directly to stderr/stdout and
-    terminating the interpreter via sys.exit.
-    This ensures safety inside test runners and interactive prompts.
+    Argparse subclass raising errors instead of using sys.exit, allowing safe test runs.
     """
     def error(self, message: str) -> None:
         raise argparse.ArgumentError(None, message)
@@ -28,36 +25,29 @@ class TestableArgumentParser(argparse.ArgumentParser):
 
 class CLIFormatter:
     """
-    Format output messages with color-coded Unicode badges for enhanced UX.
+    Formats CLI messages with status badges and draws ASCII tables.
     """
     @staticmethod
     def format_ok(message: str) -> str:
-        # Green [OK]
         return f"🟢 \033[92m[OK]\033[0m {message}"
 
     @staticmethod
     def format_warn(message: str) -> str:
-        # Yellow [WARN]
         return f"🟡 \033[93m[WARN]\033[0m {message}"
 
     @staticmethod
     def format_error(message: str) -> str:
-        # Red [ERROR]
         return f"🔴 \033[91m[ERROR]\033[0m {message}"
 
     @staticmethod
     def format_hold(message: str) -> str:
-        # Blue [HOLD]
         return f"🔵 \033[94m[HOLD]\033[0m {message}"
 
     @staticmethod
     def render_table(headers: List[str], rows: List[List[str]], max_col_width: int = 35) -> str:
         """
-        Renders a collection of data rows wrapped in clean ASCII box frames
-        using single-line box drawing characters. Fits content dynamically
-        and trims cells exceeding max_col_width to prevent wrapping bugs.
+        Formats data rows into a single ASCII box table, truncating long fields.
         """
-        # Sanitize headers and cells (convert to strings, trim if too long)
         sanitized_headers = []
         for h in headers:
             s_h = str(h)
@@ -75,7 +65,6 @@ class CLIFormatter:
                 sanitized_row.append(s_cell)
             sanitized_rows.append(sanitized_row)
 
-        # Compute column widths
         col_widths = [len(h) for h in sanitized_headers]
         for row in sanitized_rows:
             for i, cell in enumerate(row):
@@ -84,16 +73,12 @@ class CLIFormatter:
                 else:
                     col_widths.append(len(cell))
 
-        # Build top border
         top_border = "┌" + "┬".join("─" * (w + 2) for w in col_widths) + "┐\n"
         
-        # Build header row
         header_row = "│" + "│".join(f" {h.ljust(w)} " for h, w in zip(sanitized_headers, col_widths)) + "│"
         
-        # Build header separator
         header_sep = "\n├" + "┼".join("─" * (w + 2) for w in col_widths) + "┤"
         
-        # Build row contents and middle separators
         row_strings = []
         for row in sanitized_rows:
             padded_row = row + [""] * (len(col_widths) - len(row))
@@ -103,7 +88,6 @@ class CLIFormatter:
         row_sep = "\n├" + "┼".join("─" * (w + 2) for w in col_widths) + "┤\n"
         rows_section = row_sep.join(row_strings)
         
-        # Bottom
         bottom_sep = "\n└" + "┴".join("─" * (w + 2) for w in col_widths) + "┘"
 
         table_str = top_border + header_row + header_sep
@@ -115,7 +99,7 @@ class CLIFormatter:
     @staticmethod
     def get_welcome_banner() -> str:
         """
-        Returns a formatted welcome banner for CLI startup.
+        CLI welcome banner.
         """
         banner = (
             "╔════════════════════════════════════════════════════════════════╗\n"
@@ -128,14 +112,11 @@ class CLIFormatter:
 
 class CLIHelpSystem:
     """
-    Decoupled utility to format and display comprehensive library rules,
-    CLI commands, parameter constraints, and example usages.
+    Generates library rules help text and usage examples.
     """
     @staticmethod
     def render_help(config_provider: IConfigProvider) -> str:
         banner = CLIFormatter.get_welcome_banner()
-        
-        # Fetch configurations safely
         try:
             max_loans = config_provider.get_max_loans()
             loan_days = config_provider.get_loan_period_days()
@@ -194,14 +175,12 @@ class CLIHelpSystem:
 
 class CLIController:
     """
-    Outbound/Console command router adapter that parses command arguments
-    and delegates execution flow to the appropriate use case engines.
+    Parses command arguments and routes execution to target use cases.
     """
 
     def __init__(self, repository: ILibraryRepository, config_provider: IConfigProvider) -> None:
         """
-        Initializes the controller with database repository and configuration access,
-        constructing checkout, return, and reserve use cases.
+        Initializes use case controllers.
         """
         self.repository = repository
         self.config_provider = config_provider
@@ -214,8 +193,7 @@ class CLIController:
 
     def execute(self, args: List[str]) -> str:
         """
-        Parses command arguments and executes the requested operation.
-        Returns a formatted output string containing success validations or errors.
+        Dispatches command list to use cases and logs execution telemetry.
         """
         start_time = time.perf_counter()
         

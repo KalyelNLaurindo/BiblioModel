@@ -4,15 +4,14 @@ from typing import Optional, List
 
 class DomainError(Exception):
     """
-    Custom exception raised for violations of domain invariants and rules.
+    Exception raised for domain invariant violations. Keep domain isolated from external systems.
     """
     pass
 
 
 class BookEntity:
     """
-    Represents a physical book in the library system.
-    Protects domain invariants around availability, loans, and FIFO reservations.
+    Represents a physical book. Manages availability states and a FIFO reservation queue.
     """
 
     def __init__(
@@ -29,8 +28,7 @@ class BookEntity:
 
     def reserve(self, reader_id: str) -> None:
         """
-        Adds a reader to the first-in-first-out (FIFO) hold queue for this book.
-        Transitions the book status to 'Reserved'.
+        Pushes a reader to the FIFO queue. Transitions status to Reserved.
         """
         if reader_id not in self.hold_queue:
             self.hold_queue.append(reader_id)
@@ -38,27 +36,21 @@ class BookEntity:
 
     def loan_to(self, reader_id: str) -> None:
         """
-        Loans the book to a reader.
-        Ensures the book is available and not reserved for another reader.
+        Assigns the book to a reader. Enforces FIFO reservations and status constraints.
         """
-        # A book can only be loaned if it is 'Available' or 'Reserved'
         if self.status not in ("Available", "Reserved"):
             raise DomainError("Book is not available for loan")
 
-        # If there is a hold queue, the reader must be the first person in line
         if self.hold_queue:
             if self.hold_queue[0] != reader_id:
                 raise DomainError("Book is reserved for another reader")
-            # Remove the reader from the queue since they are borrowing it
             self.hold_queue.pop(0)
 
         self.status = "Loaned"
 
     def return_book(self) -> None:
         """
-        Handles the return of a book.
-        If there are outstanding reservations, sets the status back to 'Reserved'.
-        Otherwise, makes the book 'Available'.
+        Handles book return. Retains Reserved status if queue is not empty, else Available.
         """
         if self.hold_queue:
             self.status = "Reserved"
@@ -68,7 +60,7 @@ class BookEntity:
 
 class LoanEntity:
     """
-    Represents a loan transaction of a physical book by a reader.
+    Represents a loan transaction. Serves as a read-only audit log of a borrowing event.
     """
 
     def __init__(
@@ -91,7 +83,7 @@ class LoanEntity:
 
     def is_overdue(self, current_date: date) -> bool:
         """
-        Checks if the loan is overdue relative to a target date.
+        Determines if the loan is late relative to the current date.
         """
         if self.return_date is not None:
             return False
@@ -100,8 +92,7 @@ class LoanEntity:
 
 class ReaderEntity:
     """
-    Represents a library patron / reader.
-    Controls borrower eligibility based on late returns and unpaid fines.
+    Represents a library reader. Controls borrow eligibility based on outstanding fines and late items.
     """
 
     def __init__(
@@ -120,13 +111,13 @@ class ReaderEntity:
 
     def add_loan(self, loan: LoanEntity) -> None:
         """
-        Adds a new active loan to the reader.
+        Associates an active loan with the reader.
         """
         self.active_loans.append(loan)
 
     def return_loan(self, book_id: str, return_date: date) -> None:
         """
-        Returns a loaned book and removes it from active loans.
+        Marks an active loan as returned and removes it from active list.
         """
         for loan in self.active_loans:
             if loan.book_id == book_id and loan.return_date is None:
@@ -136,13 +127,13 @@ class ReaderEntity:
 
     def apply_fine(self, amount: float) -> None:
         """
-        Applies a monetary fine to the reader.
+        Increases reader's fine balance.
         """
         self.fine_balance += amount
 
     def pay_fine(self, amount: float) -> None:
         """
-        Pays off/reduces the reader's fine balance.
+        Reduces reader's fine balance (cannot go below 0).
         """
         self.fine_balance -= amount
         if self.fine_balance < 0.0:
@@ -150,15 +141,13 @@ class ReaderEntity:
 
     def waive_fine(self) -> None:
         """
-        Waives the entire fine balance for the reader.
+        Clears all outstanding fines.
         """
         self.fine_balance = 0.0
 
-
     def update_status(self, current_date: date) -> None:
         """
-        Transitions the reader's status to Suspended if they have unpaid fines
-        or overdue loans. Restores Active status otherwise.
+        Suspends the reader if they have unpaid fines or overdue loans, otherwise sets to Active.
         """
         has_overdue = any(loan.is_overdue(current_date) for loan in self.active_loans)
         if self.fine_balance > 0.0 or has_overdue:
