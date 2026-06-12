@@ -10,12 +10,13 @@ Build a report generation utility and operator parameter auditing. The command `
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] CLI Argument Router (`TSK-09`) is functional.
-* [ ] In-memory query methods for loans and fines are completed.
+* [x] CLI Argument Router (`TSK-09`) is functional.
+* [x] In-memory query methods for loans and fines are completed.
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Criterion 1 (Functional):** System successfully generates a formatted `.txt` report file containing accurate counts of active inventory and financial status.
-* [ ] **Criterion 2 (Quality/Test):** Unit tests check report format outputs and ensure fine waiving registers correct operator names.
-* [ ] **Criterion 3 (Security/Resilience):** Blocks fine waivers unless the operator name and validation reason parameters are provided.
-* [ ] **Criterion 4 (Review):** Report output formatting logic is isolated to clean infrastructure adapters.
+* [x] **Criterion 1 (Functional):** System successfully generates a formatted `.txt` report file containing accurate counts of active inventory and financial status.
+* [x] **Criterion 2 (Quality/Test):** Unit tests check report format outputs and ensure fine waiving registers correct operator names.
+* [x] **Criterion 3 (Security/Resilience):** Blocks fine waivers unless the operator name and validation reason parameters are provided.
+* [x] **Criterion 4 (Review):** Report output formatting logic is isolated to clean infrastructure adapters.
+
