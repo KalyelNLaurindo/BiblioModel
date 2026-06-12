@@ -3,7 +3,7 @@ from datetime import date
 from src.domain.entities import BookEntity, ReaderEntity, LoanEntity, DomainError
 from src.app.ports import ILibraryRepository, IConfigProvider
 from src.app.use_cases import CheckoutUseCase, ReturnUseCase, ReserveUseCase
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 class FakeLibraryRepository(ILibraryRepository):
     def __init__(self) -> None:
@@ -31,6 +31,16 @@ class FakeLibraryRepository(ILibraryRepository):
             if loan.book_id == book_id and loan.return_date is None:
                 return loan
         return None
+
+    def list_books(self) -> List[BookEntity]:
+        return list(self.books.values())
+
+    def list_readers(self) -> List[ReaderEntity]:
+        return list(self.readers.values())
+
+    def list_loans(self) -> List[LoanEntity]:
+        return list(self.loans.values())
+
 
 
 class FakeConfigProvider(IConfigProvider):
