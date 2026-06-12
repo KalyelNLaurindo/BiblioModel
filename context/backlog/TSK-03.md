@@ -10,8 +10,8 @@ Construct the pure domain model classes `ReaderEntity` and `LoanEntity` in `src/
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] Target domain module namespace is ready.
-* [ ] BookEntity status flows are completed.
+* [x] Target domain module namespace is ready.
+* [x] BookEntity status flows are completed.
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
