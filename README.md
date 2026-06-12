@@ -194,15 +194,18 @@ Ensure your modifications pass the repository quality gates before submitting a 
 
 ## **🔮 7. Future Features Planning**
 
-To extend BiblioModel's capabilities for larger installations, the following roadmap features are planned:
+To extend BiblioModel's capabilities, the following features have been added to the backlog and are planned for implementation:
 
-1. **SQL Database Adapter**: Transition from local JSON serialization to an SQLite/PostgreSQL concrete repository implementing the outbound `ILibraryRepository` port, enabling concurrent client-server write access.
-2. **Web API Layer**: Package the use cases under a FastAPI/Flask HTTP gateway, exposing RESTful endpoints for remote catalog integration.
-3. **Librarian Notification Alerts**: Integrate an automated notification system that parses overdue loans daily and fires automated billing/warning messages (SMTP/SMS) to suspended readers.
-4. **Bulk CSV Importer**: Develop a bootstrap command tool capable of bulk importing thousands of reader and book entities from Excel spreadsheets.
+1. **Exportação de Relatórios em CSV e HTML (TSK-18)**: Export data structures like active loans, books catalog, and readers list into clean formatting via CLI.
+2. **Busca Avançada (TSK-19)**: Enable partial, case-insensitive title and author matching for books and readers.
+3. **Simulação de Notificações por E-mail (TSK-20)**: Automatically check and simulate email warnings for overdue loans using standard library tools.
+4. **SQL Database Adapter**: Transition from local JSON serialization to an SQLite/PostgreSQL concrete repository implementing the outbound `ILibraryRepository` port, enabling concurrent client-server write access.
+5. **Web API Layer**: Package the use cases under a FastAPI/Flask HTTP gateway, exposing RESTful endpoints for remote catalog integration.
+6. **Bulk CSV Importer**: Develop a bootstrap command tool capable of bulk importing thousands of reader and book entities from Excel spreadsheets.
 
 ---
 
 🏁 **End of Document:** This repository README serves as the definitive engineering portal for the BiblioModel library. Changes to config parameters, schemas, or installation requirements must follow standard pull-request governance.
 
 Made with ❤️ by **Kalyel Nunes Laurindo | Software Engineer**
+

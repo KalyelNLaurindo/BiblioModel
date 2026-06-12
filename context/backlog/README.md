@@ -128,13 +128,30 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
   * *RICE Score:* 150.0 (High Priority / Must Have) | Reach: 100 / Impact: 3 / Confidence: 1.0 / Effort: 2  
   * *Status:* Done  
 
+### **📊 Phase 7: Reporting, Search & Notification Extensibility**
+
+* **[[TSK-18](TSK-18.md)]: Exportação de Relatórios em CSV e HTML**  
+  * *Epic Link:* FT-05 (CLI & Alerts Router)  
+  * *RICE Score:* 80.0 (Medium Priority / Should Have) | Reach: 80 / Impact: 2 / Confidence: 1.0 / Effort: 2  
+  * *Status:* To Do  
+* **[[TSK-19](TSK-19.md)]: Busca Avançada de Livros e Leitores**  
+  * *Epic Link:* FT-02 & FT-03 (Bounded Domain Objects & Use Case Interactors)  
+  * *RICE Score:* 70.0 (Medium Priority / Should Have) | Reach: 70 / Impact: 2 / Confidence: 1.0 / Effort: 2  
+  * *Status:* To Do  
+* **[[TSK-20](TSK-20.md)]: Simulação de Notificação de Atraso por E-mail**  
+  * *Epic Link:* FT-05 (CLI & Alerts Router)  
+  * *RICE Score:* 53.3 (Medium Priority / Could Have) | Reach: 80 / Impact: 2 / Confidence: 1.0 / Effort: 3  
+  * *Status:* To Do  
+
 ---
 
 ## **3. 📋 Basic Markdown Kanban Board**
 
 ### **🔴 To Do (Ready for Development)**
 
-* None
+* [ ] **[[TSK-18](TSK-18.md)]:** Exportação de Relatórios em CSV e HTML
+* [ ] **[[TSK-19](TSK-19.md)]:** Busca Avançada de Livros e Leitores
+* [ ] **[[TSK-20](TSK-20.md)]:** Simulação de Notificação de Atraso por E-mail
 
 ### **🟡 In Progress (Actively Being Built)**
 
@@ -164,6 +181,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-11](TSK-11.md)]:** Establish pyproject.toml Configuration and Unified Main Entry Point
 * [x] **[[TSK-16](TSK-16.md)]:** Implement Built-in Help Menu & Documentation System
 * [x] **[[TSK-17](TSK-17.md)]:** Malicious Input Validation and Shell Hardening
+
 
 
 
