@@ -461,9 +461,9 @@ def test_cli_help_command() -> None:
     assert "reserve" in res
     assert "report" in res
     assert "waive" in res
-    assert "Limite de Empréstimos Simultâneos: 4" in res
-    assert "Período de Empréstimo: 10 dias" in res
-    assert "Taxa de Multa Diária: $2.00" in res
+    assert "Simultaneous Loan Limit: 4" in res
+    assert "Loan Period: 10 days" in res
+    assert "Daily Fine Rate: $2.00" in res
 
 
 def test_cli_help_option_short_and_long() -> None:

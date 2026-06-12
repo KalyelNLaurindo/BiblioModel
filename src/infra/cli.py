@@ -150,43 +150,43 @@ class CLIHelpSystem:
         # Build Rules section
         rules_str = (
             "┌────────────────────────────────────────────────────────────────┐\n"
-            "│                    REGRAS DE NEGÓCIO ATIVAS                    │\n"
+            "│                     ACTIVE BUSINESS RULES                      │\n"
             "├────────────────────────────────────────────────────────────────┤\n"
-            f"│  • Limite de Empréstimos Simultâneos: {max_loans:<24} │\n"
-            f"│  • Período de Empréstimo: {str(loan_days) + ' dias':<37} │\n"
-            f"│  • Taxa de Multa Diária: ${fine_rate:<30.2f} │\n"
-            f"│  • Período de Carência: {str(grace_days) + ' dias':<39} │\n"
+            f"│  • Simultaneous Loan Limit: {max_loans:<35} │\n"
+            f"│  • Loan Period: {str(loan_days) + ' days':<47} │\n"
+            f"│  • Daily Fine Rate: ${fine_rate:<42.2f} │\n"
+            f"│  • Grace Period: {str(grace_days) + ' days':<46} │\n"
             "└────────────────────────────────────────────────────────────────┘"
         )
 
         # Build Commands section
-        commands_headers = ["Comando", "Parâmetros Obrigatórios / Opcionais", "Descrição"]
+        commands_headers = ["Command", "Required / Optional Parameters", "Description"]
         commands_rows = [
-            ["loan", "--book <id> --reader <id> [--date YYYY-MM-DD]", "Registra empréstimo de um livro."],
-            ["return", "--book <id> [--date YYYY-MM-DD]", "Registra a devolução de um livro."],
-            ["reserve", "--book <id> --reader <id>", "Reserva um livro indisponível (Fila FIFO)."],
-            ["report", "Nenhum", "Exporta e exibe o relatório diário do sistema."],
-            ["waive", "--reader <id> --operator <nome> --reason <motivo>", "Realiza o perdão auditado de multas."],
-            ["list-books", "Nenhum", "Lista todos os livros e filas de reservas."],
-            ["list-readers", "Nenhum", "Lista os leitores cadastrados e saldos."],
-            ["list-loans", "Nenhum", "Lista o histórico completo de empréstimos."],
-            ["shell", "Nenhum", "Inicia o console interativo multi-comandos."],
-            ["help", "Nenhum", "Exibe este painel de ajuda e documentação."]
+            ["loan", "--book <id> --reader <id> [--date YYYY-MM-DD]", "Registers a book loan."],
+            ["return", "--book <id> [--date YYYY-MM-DD]", "Registers a book return."],
+            ["reserve", "--book <id> --reader <id>", "Reserves an unavailable book (FIFO Queue)."],
+            ["report", "None", "Exports and displays the daily system status report."],
+            ["waive", "--reader <id> --operator <name> --reason <reason>", "Performs an audited waive of fines."],
+            ["list-books", "None", "Lists all books and reservation queues."],
+            ["list-readers", "None", "Lists registered readers and balances."],
+            ["list-loans", "None", "Lists the complete loan history."],
+            ["shell", "None", "Starts the interactive multi-command console."],
+            ["help", "None", "Displays this help panel and documentation."]
         ]
         commands_table = CLIFormatter.render_table(commands_headers, commands_rows, max_col_width=45)
 
         examples_str = (
-            "EXEMPLOS DE USO:\n"
-            "  • Realizar Empréstimo:    bibliomodel loan --book B001 --reader R101\n"
-            "  • Registrar Devolução:    bibliomodel return --book B001 --date 2026-06-15\n"
-            "  • Fazer Nova Reserva:     bibliomodel reserve --book B001 --reader R102\n"
-            "  • Perdoar Multa Leitor:   bibliomodel waive --reader R101 --operator \"Diretor\" --reason \"Disputa aceita\""
+            "USAGE EXAMPLES:\n"
+            "  • Check Out Book:         bibliomodel loan --book B001 --reader R101\n"
+            "  • Return Book:            bibliomodel return --book B001 --date 2026-06-15\n"
+            "  • Place Reservation:      bibliomodel reserve --book B001 --reader R102\n"
+            "  • Waive Reader Fine:      bibliomodel waive --reader R101 --operator \"Director\" --reason \"Dispute accepted\""
         )
 
         help_output = (
             f"{banner}\n\n"
             f"{rules_str}\n\n"
-            f"TABELA DE COMANDOS DISPONÍVEIS:\n{commands_table}\n\n"
+            f"AVAILABLE COMMANDS TABLE:\n{commands_table}\n\n"
             f"{examples_str}"
         )
         return help_output

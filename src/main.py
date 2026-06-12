@@ -17,31 +17,31 @@ def main() -> None:
     try:
         setup_logger()
     except PermissionError as e:
-        print(f"🔴 \033[91m[ERROR]\033[0m Falha de permissão ao configurar logs: {e}")
+        print(f"🔴 \033[91m[ERROR]\033[0m Permission failure configuring logs: {e}")
         sys.exit(1)
     except Exception as e:
-        print(f"🔴 \033[91m[ERROR]\033[0m Erro ao inicializar logs: {e}")
+        print(f"🔴 \033[91m[ERROR]\033[0m Error initializing logs: {e}")
         sys.exit(1)
 
     try:
         config = INIConfigAdapter("config.ini")
     except PermissionError as e:
-        print(CLIFormatter.format_error(f"Falha de permissão ao ler arquivo de configuração (config.ini): {e}"))
+        print(CLIFormatter.format_error(f"Permission failure reading configuration file (config.ini): {e}"))
         sys.exit(1)
     except Exception as e:
-        print(CLIFormatter.format_error(f"Erro ao ler arquivo de configuração: {e}"))
+        print(CLIFormatter.format_error(f"Error reading configuration file: {e}"))
         sys.exit(1)
 
     try:
         repo = JSONPersistenceAdapter("db_backup.json")
     except PermissionError as e:
-        print(CLIFormatter.format_error(f"Falha de permissão de acesso ao banco de dados (db_backup.json): {e}"))
+        print(CLIFormatter.format_error(f"Permission failure accessing database (db_backup.json): {e}"))
         sys.exit(1)
     except DomainError as e:
-        print(CLIFormatter.format_error(f"Falha crítica de persistência/integridade: {e}"))
+        print(CLIFormatter.format_error(f"Critical persistence/integrity failure: {e}"))
         sys.exit(1)
     except Exception as e:
-        print(CLIFormatter.format_error(f"Erro ao inicializar o banco de dados: {e}"))
+        print(CLIFormatter.format_error(f"Error initializing database: {e}"))
         sys.exit(1)
 
     controller = CLIController(repo, config)
@@ -51,10 +51,10 @@ def main() -> None:
         output = controller.execute(args)
         print(output)
     except PermissionError as e:
-        print(CLIFormatter.format_error(f"Falha de permissão durante a execução do comando: {e}"))
+        print(CLIFormatter.format_error(f"Permission failure during command execution: {e}"))
         sys.exit(1)
     except Exception as e:
-        print(CLIFormatter.format_error(f"Erro inesperado na execução: {e}"))
+        print(CLIFormatter.format_error(f"Unexpected error during execution: {e}"))
         sys.exit(1)
 
 if __name__ == "__main__":
