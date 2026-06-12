@@ -127,6 +127,10 @@ Maintain strict compliance with PEP 8 and the following conventions:
 
 For every task, the AI agent and developer must strictly follow this lifecycle:
 
+0.  **Backlog Alignment (First step of any interaction):**
+    *   Inspect the backlog folder [context/backlog/](file:///e:/Software%20Projects/Software%20Engineering%20Portfolio/01-programacao/BiblioModel/context/backlog/) and the master backlog [README.md](file:///e:/Software%20Projects/Software%20Engineering%20Portfolio/01-programacao/BiblioModel/context/backlog/README.md).
+    *   Check which tasks are not yet completed (marked as `To Do` or `[ ]`) in sequential order.
+    *   Propose the next task to work on based on what is not yet completed.
 1.  **Planning Phase (Before Code Modifications):**
     *   Create `implementation_plan.md` in the current conversation directory (written in Portuguese, PT-BR).
     *   Mark `request_feedback = true` in the plan metadata.
