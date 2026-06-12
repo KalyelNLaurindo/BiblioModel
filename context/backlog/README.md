@@ -40,14 +40,14 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-00](TSK-00.md)]: Bootstrap project workspace directory layout and initial validation configs**  
   * *Epic Link:* FT-01 (Bootstrap & Config Setup)  
   * *RICE Score:* 150.0 (High Priority / Must Have) | Reach: 100 / Impact: 3 / Confidence: 1.0 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 
 ### **📦 Phase 1: Infrastructure Foundations & Setup**
 
 * **[[TSK-01](TSK-01.md)]: Implement Core Configuration Parser and Logging Setup**  
   * *Epic Link:* FT-01 (Bootstrap & Config Setup)  
   * *RICE Score:* 150.0 (High Priority / Must Have) | Reach: 100 / Impact: 3 / Confidence: 1.0 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 
 ### **⚙️ Phase 2: Pure Domain Layer (TDD Innermost Core)**
 
@@ -134,8 +134,6 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🔴 To Do (Ready for Development)**
 
-* [ ] **[[TSK-00](TSK-00.md)]:** Bootstrap project workspace directory layout and initial validation configs
-* [ ] **[[TSK-01](TSK-01.md)]:** Implement Core Configuration Parser and Logging Setup
 * [ ] **[[TSK-02](TSK-02.md)]:** Build Domain Entity - BookEntity and FIFO Hold Queue
 * [ ] **[[TSK-03](TSK-03.md)]:** Build Domain Entities - ReaderEntity & LoanEntity
 * [ ] **[[TSK-04](TSK-04.md)]:** Develop Domain Services - FineCalculator Engine
@@ -163,4 +161,5 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🟢 Done (Merged & Verified in Main Trunk)**
 
-* None
+* [x] **[[TSK-00](TSK-00.md)]:** Bootstrap project workspace directory layout and initial validation configs
+* [x] **[[TSK-01](TSK-01.md)]:** Implement Core Configuration Parser and Logging Setup

@@ -10,12 +10,12 @@ Establish the project directory structure for BiblioModel, including namespaces 
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] Target folder `BiblioModel` is created.
-* [ ] Python environment variables and version guidelines are aligned.
+* [x] Target folder `BiblioModel` is created.
+* [x] Python environment variables and version guidelines are aligned.
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Criterion 1 (Functional):** Project folders (`src/domain`, `src/app`, `src/infra`, `tests`) are created with correct init files.
-* [ ] **Criterion 2 (Quality/Test):** Target environment test runners (`pytest` configs) execute cleanly returning zero tests discovered.
-* [ ] **Criterion 3 (Security/Resilience):** Baseline path configurations verified.
-* [ ] **Criterion 4 (Review):** `.gitignore` configured to exclude standard build outputs, local test caches, and temporary DB files.
+* [x] **Criterion 1 (Functional):** Project folders (`src/domain`, `src/app`, `src/infra`, `tests`) are created with correct init files.
+* [x] **Criterion 2 (Quality/Test):** Target environment test runners (`pytest` configs) execute cleanly returning zero tests discovered.
+* [x] **Criterion 3 (Security/Resilience):** Baseline path configurations verified.
+* [x] **Criterion 4 (Review):** `.gitignore` configured to exclude standard build outputs, local test caches, and temporary DB files.
