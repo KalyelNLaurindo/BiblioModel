@@ -10,12 +10,12 @@ Define deployment packages and setup the application entry point. Build `pyproje
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] Target directory structure is verified.
-* [ ] Python environment parameters and package versions are defined.
+* [x] Target directory structure is verified.
+* [x] Python environment parameters and package versions are defined.
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Criterion 1 (Functional):** Project runs command-line triggers after standard installation (`pip install -e .` followed by `bibliomodel`).
-* [ ] **Criterion 2 (Quality/Test):** Shell scripts test installation validity and verify configuration loads.
-* [ ] **Criterion 3 (Security/Resilience):** Entry point recovers gracefully from file directory permission errors.
-* [ ] **Criterion 4 (Review):** Clean dependencies are kept in `pyproject.toml`, showing zero external package installations.
+* [x] **Criterion 1 (Functional):** Project runs command-line triggers after standard installation (`pip install -e .` followed by `bibliomodel`).
+* [x] **Criterion 2 (Quality/Test):** Shell scripts test installation validity and verify configuration loads.
+* [x] **Criterion 3 (Security/Resilience):** Entry point recovers gracefully from file directory permission errors.
+* [x] **Criterion 4 (Review):** Clean dependencies are kept in `pyproject.toml`, showing zero external package installations.

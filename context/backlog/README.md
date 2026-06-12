@@ -126,7 +126,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-11](TSK-11.md)]: Establish pyproject.toml Configuration and Unified Main Entry Point**  
   * *Epic Link:* FT-01 & FT-05 (Packaging / Execution)  
   * *RICE Score:* 150.0 (High Priority / Must Have) | Reach: 100 / Impact: 3 / Confidence: 1.0 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 
 ---
 
@@ -134,7 +134,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🔴 To Do (Ready for Development)**
 
-* [ ] **[[TSK-11](TSK-11.md)]:** Establish pyproject.toml Configuration and Unified Main Entry Point
+* None
 
 ### **🟡 In Progress (Actively Being Built)**
 
@@ -161,6 +161,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-13](TSK-13.md)]:** Implement Handover Report Exporter and Operator Logs
 * [x] **[[TSK-14](TSK-14.md)]:** Implement Semi-Visual Terminal Table Renderer and Welcome Interface
 * [x] **[[TSK-15](TSK-15.md)]:** Implement Interactive CLI Prompt Shell
+* [x] **[[TSK-11](TSK-11.md)]:** Establish pyproject.toml Configuration and Unified Main Entry Point
 * [x] **[[TSK-16](TSK-16.md)]:** Implement Built-in Help Menu & Documentation System
 * [x] **[[TSK-17](TSK-17.md)]:** Malicious Input Validation and Shell Hardening
 
