@@ -447,6 +447,39 @@ def test_cli_shell_eof(capsys) -> None:
     assert "Interactive shell closed." in res
 
 
+def test_cli_help_command() -> None:
+    from src.infra.cli import CLIController
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider(max_loans=4, loan_period_days=10)
+    controller = CLIController(repo, config)
+    
+    # Executing 'help' command
+    res = controller.execute(["help"])
+    assert "BIBLIOMODEL CLI" in res
+    assert "loan" in res
+    assert "return" in res
+    assert "reserve" in res
+    assert "report" in res
+    assert "waive" in res
+    assert "Limite de Empréstimos Simultâneos: 4" in res
+    assert "Período de Empréstimo: 10 dias" in res
+    assert "Taxa de Multa Diária: $2.00" in res
+
+
+def test_cli_help_option_short_and_long() -> None:
+    from src.infra.cli import CLIController
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    controller = CLIController(repo, config)
+    
+    res_short = controller.execute(["-h"])
+    assert "BIBLIOMODEL CLI" in res_short
+    
+    res_long = controller.execute(["--help"])
+    assert "BIBLIOMODEL CLI" in res_long
+
+
+
 
 
 

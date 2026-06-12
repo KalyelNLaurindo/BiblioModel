@@ -10,12 +10,12 @@ Construct a built-in help and documentation command inside `src/infra/cli.py` (e
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] CLI Parser is configured.
-* [ ] External rules configurations are loaded.
+* [x] CLI Parser is configured.
+* [x] External rules configurations are loaded.
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Criterion 1 (Functional):** Executing help commands outputs clear descriptions, listing command structures (`loan`, `return`, `reserve`, `report`) and accepted parameters.
-* [ ] **Criterion 2 (Quality/Test):** Console output format is verified using test scripts asserting formatting guidelines.
-* [ ] **Criterion 3 (Security/Resilience):** Help menu successfully extracts and presents rules from `config.ini` dynamically without raising file read errors.
-* [ ] **Criterion 4 (Review):** Decoupled structure maintained, avoiding inline string bloating in core logic components.
+* [x] **Criterion 1 (Functional):** Executing help commands outputs clear descriptions, listing command structures (`loan`, `return`, `reserve`, `report`) and accepted parameters.
+* [x] **Criterion 2 (Quality/Test):** Console output format is verified using test scripts asserting formatting guidelines.
+* [x] **Criterion 3 (Security/Resilience):** Help menu successfully extracts and presents rules from `config.ini` dynamically without raising file read errors.
+* [x] **Criterion 4 (Review):** Decoupled structure maintained, avoiding inline string bloating in core logic components.
