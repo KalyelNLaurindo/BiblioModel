@@ -205,6 +205,9 @@ class CLIController:
         # 8. list-loans command
         subparsers.add_parser("list-loans")
 
+        # 9. shell command
+        subparsers.add_parser("shell")
+
         result_message = ""
         status = "unknown"
 
@@ -378,6 +381,43 @@ class CLIController:
                 table = CLIFormatter.render_table(headers, rows)
                 status = "success"
                 result_message = table
+
+            elif parsed_args.command == "shell":
+                print(CLIFormatter.get_welcome_banner())
+                print("Type 'exit' or 'quit' to exit the shell.")
+                import shlex
+                while True:
+                    try:
+                        line = input("bibliomodel> ")
+                        if not line.strip():
+                            continue
+                        
+                        try:
+                            cmd_args = shlex.split(line)
+                        except ValueError as shlex_err:
+                            print(CLIFormatter.format_error(f"Command line split error: {shlex_err}"))
+                            continue
+                        
+                        if not cmd_args:
+                            continue
+                        
+                        if cmd_args[0] in ("exit", "quit"):
+                            print("Goodbye!")
+                            break
+                        
+                        if cmd_args[0] == "shell":
+                            print(CLIFormatter.format_error("Already in shell mode."))
+                            continue
+                        
+                        res = self.execute(cmd_args)
+                        print(res)
+                    except (KeyboardInterrupt, EOFError):
+                        print("\nGoodbye!")
+                        break
+                    except Exception as loop_err:
+                        print(CLIFormatter.format_error(f"Shell loop error: {loop_err}"))
+                status = "success"
+                result_message = "Interactive shell closed."
 
 
 
