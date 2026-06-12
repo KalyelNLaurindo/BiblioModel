@@ -1,8 +1,8 @@
 import uuid
 from datetime import date, timedelta
-from src.domain.entities import LoanEntity, BookEntity, DomainError
+from src.domain.entities import LoanEntity, BookEntity, ReaderEntity, DomainError
 from src.domain.services import FineCalculator
-from src.app.ports import ILibraryRepository, IConfigProvider, ICheckoutUseCase, IReturnUseCase, IReserveUseCase
+from src.app.ports import ILibraryRepository, IConfigProvider, ICheckoutUseCase, IReturnUseCase, IReserveUseCase, IWaiveFineUseCase, IGenerateReportUseCase
 
 class CheckoutUseCase(ICheckoutUseCase):
     """
@@ -190,3 +190,64 @@ class ReserveUseCase(IReserveUseCase):
         self.repository.save_book(book)
 
         return book
+
+
+class WaiveFineUseCase(IWaiveFineUseCase):
+    """
+    Coordinates domain objects to waive all fines for a reader.
+    Implements IWaiveFineUseCase port.
+    """
+
+    def __init__(self, repository: ILibraryRepository) -> None:
+        self.repository = repository
+
+    def execute(self, reader_id: str) -> ReaderEntity:
+        reader = self.repository.get_reader(reader_id)
+        if not reader:
+            raise DomainError("Reader not found")
+
+        reader.waive_fine()
+        reader.update_status(date.today())
+        self.repository.save_reader(reader)
+        return reader
+
+
+class GenerateReportUseCase(IGenerateReportUseCase):
+    """
+    Coordinates retrieval of library status statistics.
+    Implements IGenerateReportUseCase port.
+    """
+
+    def __init__(self, repository: ILibraryRepository) -> None:
+        self.repository = repository
+
+    def execute(self) -> dict:
+        books = self.repository.list_books()
+        readers = self.repository.list_readers()
+        loans = self.repository.list_loans()
+
+        today = date.today()
+        
+        # Calculate active loans count
+        active_loans = [loan for loan in loans if loan.return_date is None]
+        total_active_loans = len(active_loans)
+
+        # Calculate overdue books
+        overdue_books = [loan for loan in active_loans if loan.is_overdue(today)]
+        total_overdue = len(overdue_books)
+
+        # Calculate unpaid fees
+        total_unpaid_fees = sum(reader.fine_balance for reader in readers)
+
+        # Queue statistics
+        reserved_books = [book for book in books if book.status == "Reserved" or len(book.hold_queue) > 0]
+        total_reservations = sum(len(book.hold_queue) for book in books)
+
+        return {
+            "total_active_loans": total_active_loans,
+            "total_overdue": total_overdue,
+            "total_unpaid_fees": total_unpaid_fees,
+            "total_reservations": total_reservations,
+            "reserved_books_count": len(reserved_books)
+        }
+

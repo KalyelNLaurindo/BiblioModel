@@ -197,9 +197,123 @@ def test_cli_controller_telemetry_logging(caplog) -> None:
     res = controller.execute(["loan", "--reader", "R1", "--book", "B1"])
         
     # Check that execution time and operator were logged under INFO level
+    # Check that execution time and operator were logged under INFO level
     info_logs = [record.message for record in caplog.records if record.levelname == "INFO"]
     assert any("resolved in" in log or "execution" in log.lower() for log in info_logs)
     assert any("operator" in log.lower() for log in info_logs)
+
+
+def test_cli_controller_waive_success(caplog) -> None:
+    from src.infra.cli import CLIController
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    
+    reader = ReaderEntity("R1", "Alice")
+    reader.apply_fine(10.00)
+    reader.update_status(date.today())
+    repo.save_reader(reader)
+    
+    controller = CLIController(repo, config)
+    
+    caplog.clear()
+    res = controller.execute([
+        "waive",
+        "--reader", "R1",
+        "--operator", "Director John",
+        "--reason", "Patron disputed fine"
+    ])
+    
+    assert "[OK]" in res
+    assert "R1" in res
+    assert reader.fine_balance == 0.0
+    assert reader.status == "Active"
+    
+    # Check that audit log is recorded
+    audit_logs = [record.message for record in caplog.records]
+    assert any("Director John" in log for log in audit_logs)
+    assert any("R1" in log for log in audit_logs)
+    assert any("Patron disputed fine" in log for log in audit_logs)
+    assert any("waived" in log.lower() or "waive" in log.lower() for log in audit_logs)
+
+def test_cli_controller_waive_missing_params() -> None:
+    from src.infra.cli import CLIController
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    
+    reader = ReaderEntity("R1", "Alice")
+    reader.apply_fine(10.00)
+    repo.save_reader(reader)
+    
+    controller = CLIController(repo, config)
+    
+    # Missing reason
+    res1 = controller.execute(["waive", "--reader", "R1", "--operator", "Director John"])
+    assert "[ERROR]" in res1
+    assert "reason" in res1.lower()
+    assert reader.fine_balance == 10.00
+    
+    # Missing operator
+    res2 = controller.execute(["waive", "--reader", "R1", "--reason", "some reason"])
+    assert "[ERROR]" in res2
+    assert "operator" in res2.lower()
+    assert reader.fine_balance == 10.00
+
+def test_cli_controller_report_export() -> None:
+    from src.infra.cli import CLIController
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    
+    # Setup library state
+    book1 = BookEntity("B1", "Book One")
+    book2 = BookEntity("B2", "Book Two")
+    book1.loan_to("R1")
+    book2.loan_to("R2")
+    # reserve book 1 for R3 and R4
+    book1.reserve("R3")
+    book1.reserve("R4")
+    
+    reader1 = ReaderEntity("R1", "Alice")
+    reader2 = ReaderEntity("R2", "Bob")
+    
+    loan1 = LoanEntity("L1", "B1", "R1", date(2026, 6, 1), date(2026, 6, 8)) # Overdue
+    loan2 = LoanEntity("L2", "B2", "R2", date(2026, 6, 10), date(2026, 6, 17)) # Active
+    
+    reader1.add_loan(loan1)
+    reader2.add_loan(loan2)
+    
+    # Bob has fine
+    reader2.apply_fine(15.00)
+    
+    repo.save_book(book1)
+    repo.save_book(book2)
+    repo.save_reader(reader1)
+    repo.save_reader(reader2)
+    repo.save_loan(loan1)
+    repo.save_loan(loan2)
+    
+    controller = CLIController(repo, config)
+    
+    report_file = "daily_handover_report.txt"
+    if os.path.exists(report_file):
+        os.remove(report_file)
+        
+    try:
+        res = controller.execute(["report"])
+        assert "[OK]" in res
+        assert os.path.exists(report_file)
+        
+        with open(report_file, "r", encoding="utf-8") as f:
+            content = f.read()
+            
+        # Check that metrics are present in the report
+        assert "Active Loans" in content or "Loans" in content
+        assert "Overdue" in content
+        assert "Fees" in content or "Fine" in content or "Unpaid" in content
+        assert "Queue" in content or "Reserve" in content
+    finally:
+        if os.path.exists(report_file):
+            os.remove(report_file)
+
 
 
 

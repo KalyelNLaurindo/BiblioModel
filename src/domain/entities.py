@@ -148,6 +148,13 @@ class ReaderEntity:
         if self.fine_balance < 0.0:
             self.fine_balance = 0.0
 
+    def waive_fine(self) -> None:
+        """
+        Waives the entire fine balance for the reader.
+        """
+        self.fine_balance = 0.0
+
+
     def update_status(self, current_date: date) -> None:
         """
         Transitions the reader's status to Suspended if they have unpaid fines

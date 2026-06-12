@@ -6,7 +6,7 @@ import getpass
 from datetime import date
 from typing import List, Optional
 from src.app.ports import ILibraryRepository, IConfigProvider
-from src.app.use_cases import CheckoutUseCase, ReturnUseCase, ReserveUseCase
+from src.app.use_cases import CheckoutUseCase, ReturnUseCase, ReserveUseCase, WaiveFineUseCase, GenerateReportUseCase
 from src.domain.entities import DomainError
 
 class TestableArgumentParser(argparse.ArgumentParser):
@@ -66,6 +66,9 @@ class CLIController:
         self.checkout_use_case = CheckoutUseCase(repository, config_provider)
         self.return_use_case = ReturnUseCase(repository, config_provider)
         self.reserve_use_case = ReserveUseCase(repository)
+        self.waive_fine_use_case = WaiveFineUseCase(repository)
+        self.generate_report_use_case = GenerateReportUseCase(repository)
+
 
     def execute(self, args: List[str]) -> str:
         """
@@ -111,8 +114,15 @@ class CLIController:
         # 4. report command
         subparsers.add_parser("report")
 
+        # 5. waive command
+        waive_parser = subparsers.add_parser("waive")
+        waive_parser.add_argument("--reader", required=True, help="ID of the reader whose fine is waived")
+        waive_parser.add_argument("--operator", help="Name of the operator waiving the fine")
+        waive_parser.add_argument("--reason", help="Reason for waiving the fine")
+
         result_message = ""
         status = "unknown"
+
 
         try:
             try:
@@ -180,8 +190,46 @@ class CLIController:
                 )
 
             elif parsed_args.command == "report":
+                report_data = self.generate_report_use_case.execute()
+                report_content = (
+                    "========================================\n"
+                    "       DAILY LIBRARY STATUS REPORT      \n"
+                    "========================================\n"
+                    f"Date: {date.today().isoformat()}\n"
+                    "----------------------------------------\n"
+                    f"Total Active Loans: {report_data['total_active_loans']}\n"
+                    f"Overdue Loans:      {report_data['total_overdue']}\n"
+                    f"Total Unpaid Fees:  ${report_data['total_unpaid_fees']:.2f}\n"
+                    f"Reserved Books Count: {report_data['reserved_books_count']}\n"
+                    f"Total Hold Queue Size: {report_data['total_reservations']}\n"
+                    "========================================\n"
+                )
+                
+                report_file = "daily_handover_report.txt"
+                try:
+                    with open(report_file, "w", encoding="utf-8") as f:
+                        f.write(report_content)
+                    status = "success"
+                    result_message = CLIFormatter.format_ok(f"Success: {report_file} generated.")
+                except Exception as write_err:
+                    status = "system_error"
+                    result_message = CLIFormatter.format_error(f"Failed to write report file: {write_err}")
+
+            elif parsed_args.command == "waive":
+                if not parsed_args.operator or not parsed_args.reason:
+                    status = "validation_error"
+                    result_message = CLIFormatter.format_error("Operator name and reason parameters are required to waive fines.")
+                    return result_message
+
+                self.waive_fine_use_case.execute(parsed_args.reader)
                 status = "success"
-                result_message = CLIFormatter.format_ok("Success: Basic library state report generated.")
+                # Log audit trail to the log file (required to be logged in bibliomodel.log)
+                logger.warning(
+                    f"AUDIT: Operator '{parsed_args.operator}' waived fine for Reader '{parsed_args.reader}' "
+                    f"due to: '{parsed_args.reason}'"
+                )
+                result_message = CLIFormatter.format_ok(f"Success: Fine waived for Reader '{parsed_args.reader}'.")
+
 
             else:
                 status = "unknown_command"

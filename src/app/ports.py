@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import date
-from typing import Optional
+from typing import Optional, List
 from src.domain.entities import BookEntity, ReaderEntity, LoanEntity
 
 class IConfigProvider(ABC):
@@ -84,6 +84,28 @@ class ILibraryRepository(ABC):
         """
         pass
 
+    @abstractmethod
+    def list_books(self) -> List[BookEntity]:
+        """
+        Retrieves all books in the repository.
+        """
+        pass
+
+    @abstractmethod
+    def list_readers(self) -> List[ReaderEntity]:
+        """
+        Retrieves all readers in the repository.
+        """
+        pass
+
+    @abstractmethod
+    def list_loans(self) -> List[LoanEntity]:
+        """
+        Retrieves all loans in the repository.
+        """
+        pass
+
+
 
 class ICheckoutUseCase(ABC):
     """
@@ -122,6 +144,33 @@ class IReserveUseCase(ABC):
         Executes the book reservation process.
         """
         pass
+
+
+class IWaiveFineUseCase(ABC):
+    """
+    Inbound port defining the fine waiving execution use case.
+    """
+
+    @abstractmethod
+    def execute(self, reader_id: str) -> ReaderEntity:
+        """
+        Executes the fine waiving process for a given reader.
+        """
+        pass
+
+
+class IGenerateReportUseCase(ABC):
+    """
+    Inbound port defining the report generation use case.
+    """
+
+    @abstractmethod
+    def execute(self) -> dict:
+        """
+        Compiles active loans, overdue statuses, fines, and queue stats.
+        """
+        pass
+
 
 
 

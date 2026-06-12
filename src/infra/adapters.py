@@ -3,7 +3,7 @@ import json
 import logging
 import configparser
 from datetime import date
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from src.app.ports import IConfigProvider, ILibraryRepository
 from src.domain.entities import BookEntity, ReaderEntity, LoanEntity, DomainError
 
@@ -300,6 +300,16 @@ class JSONPersistenceAdapter(ILibraryRepository):
     def save_loan(self, loan: LoanEntity) -> None:
         self._loans[loan.loan_id] = loan
         self._save_to_disk()
+
+    def list_books(self) -> List[BookEntity]:
+        return list(self._books.values())
+
+    def list_readers(self) -> List[ReaderEntity]:
+        return list(self._readers.values())
+
+    def list_loans(self) -> List[LoanEntity]:
+        return list(self._loans.values())
+
 
 
 def setup_logger(log_file: str = "bibliomodel.log") -> logging.Logger:
