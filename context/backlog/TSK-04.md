@@ -15,7 +15,8 @@ Construct the pure domain service class `FineCalculator` inside `src/domain/serv
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Criterion 1 (Functional):** Service accurately calculates daily late fees, validating that return dates preceding due dates result in $0.00 fine.
-* [ ] **Criterion 2 (Domain Invariant):** Calculation respects grace periods (no fees applied if late days are under threshold).
-* [ ] **Criterion 3 (Quality/Test):** Unit tests inside `tests/test_domain.py` verify fine math against varying dates and grace periods.
-* [ ] **Criterion 4 (Review):** Layer decoupling is maintained. Service does not import external libraries.
+* [x] **Criterion 1 (Functional):** Service accurately calculates daily late fees, validating that return dates preceding due dates result in $0.00 fine.
+* [x] **Criterion 2 (Domain Invariant):** Calculation respects grace periods (no fees applied if late days are under threshold).
+* [x] **Criterion 3 (Quality/Test):** Unit tests inside `tests/test_domain.py` verify fine math against varying dates and grace periods.
+* [x] **Criterion 4 (Review):** Layer decoupling is maintained. Service does not import external libraries.
+

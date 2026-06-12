@@ -15,7 +15,8 @@ Construct the pure domain model classes `ReaderEntity` and `LoanEntity` in `src/
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Criterion 1 (Functional):** `ReaderEntity` handles `reader_id`, `name`, `status` (`Active` or `Suspended`), `fine_balance`, and `active_loans`. `LoanEntity` encapsulates loan records.
-* [ ] **Criterion 2 (Domain Invariant):** Reader status transitions to `Suspended` if any loan date exceeds due rules or unpaid fines accrue.
-* [ ] **Criterion 3 (Quality/Test):** Tests in `tests/test_domain.py` verify checkout limitations for suspended readers.
-* [ ] **Criterion 4 (Review):** Layer encapsulation is strictly respected (no imports of persistence/CLI modules).
+* [x] **Criterion 1 (Functional):** `ReaderEntity` handles `reader_id`, `name`, `status` (`Active` or `Suspended`), `fine_balance`, and `active_loans`. `LoanEntity` encapsulates loan records.
+* [x] **Criterion 2 (Domain Invariant):** Reader status transitions to `Suspended` if any loan date exceeds due rules or unpaid fines accrue.
+* [x] **Criterion 3 (Quality/Test):** Tests in `tests/test_domain.py` verify checkout limitations for suspended readers.
+* [x] **Criterion 4 (Review):** Layer encapsulation is strictly respected (no imports of persistence/CLI modules).
+
