@@ -2,7 +2,7 @@ import pytest
 from datetime import date
 from src.domain.entities import BookEntity, ReaderEntity, LoanEntity, DomainError
 from src.app.ports import ILibraryRepository, IConfigProvider
-from src.app.use_cases import CheckoutUseCase, ReturnUseCase, ReserveUseCase
+from src.app.use_cases import CheckoutUseCase, ReturnUseCase, ReserveUseCase, WaiveFineUseCase
 from typing import Dict, Optional, List
 
 class FakeLibraryRepository(ILibraryRepository):
@@ -564,3 +564,37 @@ def test_reserve_reader_not_found() -> None:
     # Act & Assert
     with pytest.raises(DomainError, match="Reader not found"):
         use_case.execute(reader_id="R999", book_id="B1")
+
+
+def test_input_validation_use_cases() -> None:
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    checkout_use_case = CheckoutUseCase(repo, config)
+    return_use_case = ReturnUseCase(repo, config)
+    reserve_use_case = ReserveUseCase(repo)
+    waive_use_case = WaiveFineUseCase(repo)
+    
+    # Checkout malformed IDs
+    with pytest.raises(DomainError, match="Invalid reader ID format"):
+        checkout_use_case.execute(reader_id="Rabc", book_id="B1", checkout_date=date(2026, 6, 12))
+    with pytest.raises(DomainError, match="Invalid book ID format"):
+        checkout_use_case.execute(reader_id="R1", book_id="B-123", checkout_date=date(2026, 6, 12))
+    with pytest.raises(DomainError, match="Invalid reader ID format"):
+        checkout_use_case.execute(reader_id="R1/../etc", book_id="B1", checkout_date=date(2026, 6, 12))
+    with pytest.raises(DomainError, match="Invalid reader ID format"):
+        checkout_use_case.execute(reader_id="   ", book_id="B1", checkout_date=date(2026, 6, 12))
+        
+    # Return malformed book ID
+    with pytest.raises(DomainError, match="Invalid book ID format"):
+        return_use_case.execute(book_id="Babc", return_date=date(2026, 6, 12))
+        
+    # Reserve malformed IDs
+    with pytest.raises(DomainError, match="Invalid reader ID format"):
+        reserve_use_case.execute(reader_id="R", book_id="B1")
+    with pytest.raises(DomainError, match="Invalid book ID format"):
+        reserve_use_case.execute(reader_id="R1", book_id="B")
+        
+    # Waive malformed reader ID
+    with pytest.raises(DomainError, match="Invalid reader ID format"):
+        waive_use_case.execute(reader_id="R_123")
+

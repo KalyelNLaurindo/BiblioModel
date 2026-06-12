@@ -8,6 +8,7 @@ from typing import List, Optional
 from src.app.ports import ILibraryRepository, IConfigProvider
 from src.app.use_cases import CheckoutUseCase, ReturnUseCase, ReserveUseCase, WaiveFineUseCase, GenerateReportUseCase
 from src.domain.entities import DomainError
+from src.app.validators import InputValidator
 
 class TestableArgumentParser(argparse.ArgumentParser):
     """
@@ -290,7 +291,6 @@ class CLIController:
         status = "unknown"
 
 
-
         try:
             try:
                 parsed_args = parser.parse_args(args)
@@ -298,6 +298,16 @@ class CLIController:
                 status = "parse_error"
                 result_message = CLIFormatter.format_error(f"Error parsing arguments: {str(err)}")
                 return result_message
+
+            # Apply input validations
+            if hasattr(parsed_args, "reader") and parsed_args.reader is not None:
+                parsed_args.reader = InputValidator.sanitize_and_validate_reader_id(parsed_args.reader)
+            if hasattr(parsed_args, "book") and parsed_args.book is not None:
+                parsed_args.book = InputValidator.sanitize_and_validate_book_id(parsed_args.book)
+            if hasattr(parsed_args, "operator") and parsed_args.operator is not None:
+                parsed_args.operator = InputValidator.sanitize_and_validate_general(parsed_args.operator, "operator")
+            if hasattr(parsed_args, "reason") and parsed_args.reason is not None:
+                parsed_args.reason = InputValidator.sanitize_and_validate_general(parsed_args.reason, "reason")
 
             if parsed_args.command == "loan":
                 loan_date = date.today()

@@ -119,7 +119,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-17](TSK-17.md)]: Malicious Input Validation and Shell Hardening**  
   * *Epic Link:* FT-05 (CLI & Alerts Router)  
   * *RICE Score:* 90.0 (High Priority / Must Have) | Reach: 90 / Impact: 2 / Confidence: 1.0 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 
 ### **🚀 Phase 6: Packaging & Master Entry Point (Deployable Deliverable)**
 
@@ -134,7 +134,6 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🔴 To Do (Ready for Development)**
 
-* [ ] **[[TSK-17](TSK-17.md)]:** Malicious Input Validation and Shell Hardening
 * [ ] **[[TSK-11](TSK-11.md)]:** Establish pyproject.toml Configuration and Unified Main Entry Point
 
 ### **🟡 In Progress (Actively Being Built)**
@@ -163,6 +162,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-14](TSK-14.md)]:** Implement Semi-Visual Terminal Table Renderer and Welcome Interface
 * [x] **[[TSK-15](TSK-15.md)]:** Implement Interactive CLI Prompt Shell
 * [x] **[[TSK-16](TSK-16.md)]:** Implement Built-in Help Menu & Documentation System
+* [x] **[[TSK-17](TSK-17.md)]:** Malicious Input Validation and Shell Hardening
 
 
 
