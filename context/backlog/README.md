@@ -54,7 +54,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-02](TSK-02.md)]: Build Domain Entity - BookEntity and FIFO Hold Queue**  
   * *Epic Link:* FT-02 (Bounded Domain Objects)  
   * *RICE Score:* 270.0 (High Priority / Must Have) | Reach: 90 / Impact: 3 / Confidence: 1.0 / Effort: 1  
-  * *Status:* To Do  
+  * *Status:* Done  
 * **[[TSK-03](TSK-03.md)]: Build Domain Entities - ReaderEntity & LoanEntity**  
   * *Epic Link:* FT-02 (Bounded Domain Objects)  
   * *RICE Score:* 150.0 (High Priority / Must Have) | Reach: 100 / Impact: 3 / Confidence: 1.0 / Effort: 2  
@@ -134,7 +134,6 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🔴 To Do (Ready for Development)**
 
-* [ ] **[[TSK-02](TSK-02.md)]:** Build Domain Entity - BookEntity and FIFO Hold Queue
 * [ ] **[[TSK-03](TSK-03.md)]:** Build Domain Entities - ReaderEntity & LoanEntity
 * [ ] **[[TSK-04](TSK-04.md)]:** Develop Domain Services - FineCalculator Engine
 * [ ] **[[TSK-05](TSK-05.md)]:** Create Application Use Case - CheckoutUseCase
@@ -163,3 +162,4 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 * [x] **[[TSK-00](TSK-00.md)]:** Bootstrap project workspace directory layout and initial validation configs
 * [x] **[[TSK-01](TSK-01.md)]:** Implement Core Configuration Parser and Logging Setup
+* [x] **[[TSK-02](TSK-02.md)]:** Build Domain Entity - BookEntity and FIFO Hold Queue

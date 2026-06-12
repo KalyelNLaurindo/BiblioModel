@@ -10,12 +10,12 @@ Construct the pure domain model class `BookEntity` in `src/domain/entities.py`. 
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] Bounded domain package namespace `src/domain/` exists.
-* [ ] Naming standards for entities defined.
+* [x] Bounded domain package namespace `src/domain/` exists.
+* [x] Naming standards for entities defined.
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Criterion 1 (Functional):** `BookEntity` must be built. It encapsulates `book_id` (string), `title` (string), `status` (string), and `hold_queue` (FIFO array/list of reader IDs).
-* [ ] **Criterion 2 (Domain Invariant):** Changing states or adding users to the hold queue must enforce domain invariants (e.g., a book cannot be loaned if another reader holds the top reservation).
-* [ ] **Criterion 3 (Quality/Test):** Unit tests in `tests/test_domain.py` verify all states, transitions, and FIFO holds.
-* [ ] **Criterion 4 (Review):** The entity file is a pure Python implementation and imports zero infrastructure logic.
+* [x] **Criterion 1 (Functional):** `BookEntity` must be built. It encapsulates `book_id` (string), `title` (string), `status` (string), and `hold_queue` (FIFO array/list of reader IDs).
+* [x] **Criterion 2 (Domain Invariant):** Changing states or adding users to the hold queue must enforce domain invariants (e.g., a book cannot be loaned if another reader holds the top reservation).
+* [x] **Criterion 3 (Quality/Test):** Unit tests in `tests/test_domain.py` verify all states, transitions, and FIFO holds.
+* [x] **Criterion 4 (Review):** The entity file is a pure Python implementation and imports zero infrastructure logic.
