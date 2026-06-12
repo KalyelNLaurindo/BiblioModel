@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from src.domain.entities import LoanEntity, BookEntity, ReaderEntity, DomainError
 from src.domain.services import FineCalculator
 from src.app.ports import ILibraryRepository, IConfigProvider, ICheckoutUseCase, IReturnUseCase, IReserveUseCase, IWaiveFineUseCase, IGenerateReportUseCase
+from src.app.validators import InputValidator
 
 class CheckoutUseCase(ICheckoutUseCase):
     """
@@ -23,6 +24,9 @@ class CheckoutUseCase(ICheckoutUseCase):
         Validates reader eligibility, loan limits, and book availability.
         Returns the created LoanEntity if successful, or raises DomainError on violation.
         """
+        reader_id = InputValidator.sanitize_and_validate_reader_id(reader_id)
+        book_id = InputValidator.sanitize_and_validate_book_id(book_id)
+
         # Retrieve reader and book from the repository
         reader = self.repository.get_reader(reader_id)
         if not reader:
@@ -91,6 +95,8 @@ class ReturnUseCase(IReturnUseCase):
         updates the reader's state (suspending them if fines are accrued),
         updates the book's availability, and saves all changes.
         """
+        book_id = InputValidator.sanitize_and_validate_book_id(book_id)
+
         # Retrieve book from repository
         book = self.repository.get_book(book_id)
         if not book:
@@ -160,6 +166,9 @@ class ReserveUseCase(IReserveUseCase):
         Ensures book is not available (must be checked out),
         reader doesn't already hold the book, and reader hasn't already reserved it.
         """
+        reader_id = InputValidator.sanitize_and_validate_reader_id(reader_id)
+        book_id = InputValidator.sanitize_and_validate_book_id(book_id)
+
         # Retrieve book from repository
         book = self.repository.get_book(book_id)
         if not book:
@@ -202,6 +211,7 @@ class WaiveFineUseCase(IWaiveFineUseCase):
         self.repository = repository
 
     def execute(self, reader_id: str) -> ReaderEntity:
+        reader_id = InputValidator.sanitize_and_validate_reader_id(reader_id)
         reader = self.repository.get_reader(reader_id)
         if not reader:
             raise DomainError("Reader not found")

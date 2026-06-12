@@ -479,6 +479,39 @@ def test_cli_help_option_short_and_long() -> None:
     assert "BIBLIOMODEL CLI" in res_long
 
 
+def test_cli_malicious_input_validation() -> None:
+    from src.infra.cli import CLIController
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    controller = CLIController(repo, config)
+    
+    # Empty field/spaces only
+    res = controller.execute(["loan", "--reader", "   ", "--book", "B1"])
+    assert "[ERROR]" in res
+    assert "invalid" in res.lower()
+    
+    # Path traversal attempt in book ID
+    res = controller.execute(["loan", "--reader", "R1", "--book", "B1/../../etc/passwd"])
+    assert "[ERROR]" in res
+    assert "invalid" in res.lower()
+    
+    # Traversal in reader ID
+    res = controller.execute(["loan", "--reader", "R1\\..\\..\\secret", "--book", "B1"])
+    assert "[ERROR]" in res
+    
+    # Waive validation for operator/reason
+    res = controller.execute(["waive", "--reader", "R1", "--operator", "  ", "--reason", "Reason"])
+    assert "[ERROR]" in res
+    
+    res = controller.execute(["waive", "--reader", "R1", "--operator", "Op", "--reason", "  "])
+    assert "[ERROR]" in res
+    
+    # Traversal characters in reason
+    res = controller.execute(["waive", "--reader", "R1", "--operator", "Op", "--reason", "Reason/../nested"])
+    assert "[ERROR]" in res
+
+
+
 
 
 
