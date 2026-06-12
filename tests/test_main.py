@@ -28,4 +28,4 @@ def test_main_permission_error_handling(capsys) -> None:
             assert excinfo.value.code == 1
             captured = capsys.readouterr()
             assert "[ERROR]" in captured.out
-            assert "Falha de permissão" in captured.out
+            assert "Permission failure" in captured.out
