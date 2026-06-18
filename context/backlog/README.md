@@ -165,6 +165,18 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
   * *Epic Link:* FT-05 (CLI & Alerts Router)  
   * *RICE Score:* 64.0 (Medium Priority / Should Have) | Reach: 80 / Impact: 1 / Confidence: 1.0 / Effort: 1  
   * *Status:* Done  
+* **[[TSK-26](TSK-26.md)]: Implement Unit of Work (UoW) Pattern**  
+  * *Epic Link:* FT-10 (Architectural Resilience)  
+  * *RICE Score:* 72.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 2  
+  * *Status:* To Do  
+* **[[TSK-27](TSK-27.md)]: Implement Domain Events & Event Dispatcher**  
+  * *Epic Link:* FT-10 (Architectural Resilience)  
+  * *RICE Score:* 64.0 (Medium Priority / Should Have) | Reach: 80 / Impact: 2 / Confidence: 0.8 / Effort: 2  
+  * *Status:* To Do  
+* **[[TSK-28](TSK-28.md)]: Implement Dependency Injection (DI) Container**  
+  * *Epic Link:* FT-10 (Architectural Resilience)  
+  * *RICE Score:* 48.0 (Medium Priority / Could Have) | Reach: 60 / Impact: 2 / Confidence: 0.8 / Effort: 2  
+  * *Status:* To Do  
 
 ---
 
@@ -173,8 +185,10 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🔴 To Do (Ready for Development)**
 
-**Phase 8 — Automação de Cobrança & Relatórios Operacionais**
-* None
+**Phase 9 — Engenharia Arquitetural Avançada (Melhorias Sênior)**
+* [ ] **[[TSK-26](TSK-26.md)]:** Implement Unit of Work (UoW) Pattern
+* [ ] **[[TSK-27](TSK-27.md)]:** Implement Domain Events & Event Dispatcher
+* [ ] **[[TSK-28](TSK-28.md)]:** Implement Dependency Injection (DI) Container
 
 
 ### **🟡 In Progress (Actively Being Built)**
