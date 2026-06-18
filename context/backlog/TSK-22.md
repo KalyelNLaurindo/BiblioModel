@@ -16,8 +16,8 @@ Implementar o relatório de histórico completo de empréstimos por leitor, aces
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Critério 1 (Persistência de Histórico):** Ao concluir uma devolução via `ReturnUseCase`, o registro do `LoanEntity` (incluindo datas, multa calculada, e status final) é arquivado em `loan_history.json` via `LoanHistoryAdapter`, sem modificar o fluxo atual de persistência do inventário.
-* [ ] **Critério 2 (Comando reader-history):** `bibliomodel reader-history --reader-id <id>` exibe uma tabela Rich com: título do livro, data de checkout, data de devolução, dias de atraso, multa aplicada, e status final (RETURNED_ON_TIME / RETURNED_LATE / ACTIVE).
-* [ ] **Critério 3 (Filtros):** O comando suporta `--last-n <N>` (últimos N registros) e `--overdue-only` (apenas empréstimos com multa > 0) para facilitar auditorias direcionadas.
-* [ ] **Critério 4 (Exportação):** `--export <path>` gera um arquivo `.txt` com o histórico formatado em colunas fixas — adequado para impressão e arquivamento físico pelo diretor.
-* [ ] **Critério 5 (Qualidade/Testes):** Testes integrados cobrem: devolução gera registro no histórico, `reader-history` retorna dados corretos para leitor com múltiplos empréstimos, filtro `--overdue-only` exclui empréstimos sem multa, e exportação gera arquivo com o conteúdo esperado.
+* [x] **Critério 1 (Persistência de Histórico):** Ao concluir uma devolução via `ReturnUseCase`, o registro do `LoanEntity` (incluindo datas, multa calculada, e status final) é arquivado em `loan_history.json` via `LoanHistoryAdapter`, sem modificar o fluxo atual de persistência do inventário.
+* [x] **Critério 2 (Comando reader-history):** `bibliomodel reader-history --reader-id <id>` exibe uma tabela Rich com: título do livro, data de checkout, data de devolução, dias de atraso, multa aplicada, e status final (RETURNED_ON_TIME / RETURNED_LATE / ACTIVE).
+* [x] **Critério 3 (Filtros):** O comando suporta `--last-n <N>` (últimos N registros) e `--overdue-only` (apenas empréstimos com multa > 0) para facilitar auditorias direcionadas.
+* [x] **Critério 4 (Exportação):** `--export <path>` gera um arquivo `.txt` com o histórico formatado em colunas fixas — adequado para impressão e arquivamento físico pelo diretor.
+* [x] **Critério 5 (Qualidade/Testes):** Testes integrados cobrem: devolução gera registro no histórico, `reader-history` retorna dados corretos para leitor com múltiplos empréstimos, filtro `--overdue-only` exclui empréstimos sem multa, e exportação gera arquivo com o conteúdo esperado.

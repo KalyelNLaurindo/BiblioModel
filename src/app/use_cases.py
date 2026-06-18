@@ -2,7 +2,7 @@ import uuid
 from datetime import date, timedelta
 from src.domain.entities import LoanEntity, BookEntity, ReaderEntity, DomainError, ReaderAutoSuspendedError
 from src.domain.services import FineCalculator
-from src.app.ports import ILibraryRepository, IConfigProvider, ICheckoutUseCase, IReturnUseCase, IReserveUseCase, IWaiveFineUseCase, IGenerateReportUseCase
+from src.app.ports import ILibraryRepository, IConfigProvider, ICheckoutUseCase, IReturnUseCase, IReserveUseCase, IWaiveFineUseCase, IGenerateReportUseCase, ILoanHistoryRepository
 from src.app.validators import InputValidator
 
 class CheckoutUseCase(ICheckoutUseCase):
@@ -74,9 +74,10 @@ class ReturnUseCase(IReturnUseCase):
     Orchestrates domain objects to process book returns and calculate late fee penalties.
     """
 
-    def __init__(self, repository: ILibraryRepository, config_provider: IConfigProvider) -> None:
+    def __init__(self, repository: ILibraryRepository, config_provider: IConfigProvider, history_repository: ILoanHistoryRepository = None) -> None:
         self.repository = repository
         self.config_provider = config_provider
+        self.history_repository = history_repository
 
     def execute(self, book_id: str, return_date: date) -> LoanEntity:
         """
@@ -119,6 +120,13 @@ class ReturnUseCase(IReturnUseCase):
 
         auto_suspend_days = self.config_provider.get_auto_suspend_overdue_days()
         reader.update_status(return_date, auto_suspend_days)
+
+        if self.history_repository:
+            delay_days = (return_date - loan.due_date).days
+            if delay_days < 0:
+                delay_days = 0
+            final_status = "RETURNED_LATE" if delay_days > grace_period else "RETURNED_ON_TIME"
+            self.history_repository.archive_loan(loan, book.title, final_status, delay_days)
 
         self.repository.save_book(book)
         self.repository.save_reader(reader)

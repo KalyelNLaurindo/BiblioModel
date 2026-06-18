@@ -125,3 +125,9 @@ db_backup.json
 db_backup.json.bak
 db_backup.tmp
 bibliomodel.log
+loan_history.json
+loan_history.json.bak
+loan_history.json.tmp
+daily_handover_report.txt
+reports/
+notifications/
