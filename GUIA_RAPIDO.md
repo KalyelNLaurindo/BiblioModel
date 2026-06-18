@@ -130,6 +130,16 @@ Dentro do shell, basta digitar os comandos diretamente (ex: `list-books` ou `loa
 
 ---
 
+### 9. Outros Comandos de Relatórios e Busca
+- **Busca de Itens/Leitores**: `bibliomodel search-books "termo"` ou `bibliomodel search-readers "nome"`
+- **Exportação CSV/HTML**: `bibliomodel export --type [books|readers|loans] --format [csv|html]`
+- **Simulação de Notificações**: `bibliomodel notify-overdue`
+- **Reconciliação de Suspensões**: `bibliomodel check-overdue`
+- **Histórico do Leitor**: `bibliomodel reader-history --reader-id R202`
+- **Ranking de Popularidade**: `bibliomodel popularity-report`
+
+---
+
 ## ❓ Perguntas e Resolução de Problemas
 
 | Situação / Erro | O que fazer |

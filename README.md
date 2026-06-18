@@ -57,17 +57,24 @@ To guarantee sub-millisecond execution and complete privacy, BiblioModel operate
 
 The command-line interface is engineered for high operational speed. Use the following core execution commands:
 
-| Command / Action | Syntax                                                                       | Description                                            | Example                                                                                    |
-| :--------------- | :--------------------------------------------------------------------------- | :----------------------------------------------------- | :----------------------------------------------------------------------------------------- |
-| **Start Shell**  | `python src/main.py shell`                                                   | Launches the interactive CLI prompt shell              | `python src/main.py shell`                                                                 |
-| **Book Loan**    | `python src/main.py loan --reader <id> --book <id> [--date YYYY-MM-DD]`      | Registers a checkout and verifies reader eligibility   | `python src/main.py loan --reader R101 --book B202`                                        |
-| **Book Return**  | `python src/main.py return --book <id> [--date YYYY-MM-DD]`                  | Processes a return and calculates late fees            | `python src/main.py return --book B202`                                                    |
-| **Reserve Book** | `python src/main.py reserve --reader <id> --book <id>`                       | Places a reader in the book's FIFO reservation queue   | `python src/main.py reserve --reader R102 --book B202`                                     |
-| **Waive Fine**   | `python src/main.py waive --reader <id> --operator <name> --reason <reason>` | Clears reader fines and writes an audit log trail      | `python src/main.py waive --reader R101 --operator "Jane" --reason "Damaged page settled"` |
-| **Daily Report** | `python src/main.py report`                                                  | Exports a daily library status handover report         | `python src/main.py report`                                                                |
-| **List Books**   | `python src/main.py list-books`                                              | Renders a table of all books and reservation queues    | `python src/main.py list-books`                                                            |
-| **List Readers** | `python src/main.py list-readers`                                            | Renders a table of all registered readers and balances | `python src/main.py list-readers`                                                          |
-| **List Loans**   | `python src/main.py list-loans`                                              | Renders an audit table of active and past loans        | `python src/main.py list-loans`                                                            |
+| Command / Action        | Syntax                                                                                            | Description                                                | Example                                                                                    |
+| :---------------------- | :------------------------------------------------------------------------------------------------ | :--------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
+| **Start Shell**         | `python src/main.py shell`                                                                        | Launches the interactive CLI prompt shell                  | `python src/main.py shell`                                                                 |
+| **Book Loan**           | `python src/main.py loan --reader <id> --book <id> [--date YYYY-MM-DD]`                           | Registers a checkout and verifies reader eligibility       | `python src/main.py loan --reader R101 --book B202`                                        |
+| **Book Return**         | `python src/main.py return --book <id> [--date YYYY-MM-DD] [--system-delay] [--book-donation]`    | Processes a return, calculates late fees, applies policies | `python src/main.py return --book B202 --book-donation`                                    |
+| **Reserve Book**        | `python src/main.py reserve --reader <id> --book <id>`                                            | Places a reader in the book's FIFO reservation queue       | `python src/main.py reserve --reader R102 --book B202`                                     |
+| **Waive Fine**          | `python src/main.py waive --reader <id> --operator <name> --reason <reason>`                      | Clears reader fines and writes an audit log trail          | `python src/main.py waive --reader R101 --operator "Jane" --reason "Damaged page settled"` |
+| **Daily Report**        | `python src/main.py report`                                                                       | Exports a daily library status handover report             | `python src/main.py report`                                                                |
+| **List Books**          | `python src/main.py list-books`                                                                   | Renders a table of all books and reservation queues        | `python src/main.py list-books`                                                            |
+| **List Readers**        | `python src/main.py list-readers`                                                                 | Renders a table of all registered readers and balances     | `python src/main.py list-readers`                                                          |
+| **List Loans**          | `python src/main.py list-loans`                                                                   | Renders an audit table of active and past loans            | `python src/main.py list-loans`                                                            |
+| **Search Books**        | `python src/main.py search-books <query>`                                                         | Performs case-insensitive partial match search for books   | `python src/main.py search-books "TDD"`                                                    |
+| **Search Readers**      | `python src/main.py search-readers <query>`                                                       | Performs case-insensitive partial match search for readers | `python src/main.py search-readers "Alice"`                                                |
+| **Export Reports**      | `python src/main.py export --type [books/readers/loans] --format [csv/html] [--output path]`      | Exports catalog state reports with path traversal security  | `python src/main.py export --type loans --format html`                                     |
+| **Notify Overdue**      | `python src/main.py notify-overdue`                                                               | Scans active overdues and creates simulated email warnings | `python src/main.py notify-overdue`                                                        |
+| **Check Suspensions**   | `python src/main.py check-overdue`                                                                | Bulk updates active auto-suspension states of patrons      | `python src/main.py check-overdue`                                                         |
+| **Patron Loan History** | `python src/main.py reader-history --reader-id <id> [--last-n <n>] [--overdue-only] [--export p]` | Displays unified active and archived loan records          | `python src/main.py reader-history --reader-id R101 --overdue-only`                        |
+| **Popularity Ranking**  | `python src/main.py popularity-report [--top <n>] [--with-waitlist] [--underutilized]`            | Renders acerbo ranking lists with procurement advice       | `python src/main.py popularity-report --top 3`                                             |
 
 > [!NOTE]
 > **Data & Validation Rules:**
@@ -198,14 +205,11 @@ Ensure your modifications pass the repository quality gates before submitting a 
 
 ## **🔮 7. Future Features Planning**
 
-To extend BiblioModel's capabilities, the following features have been added to the backlog and are planned for implementation:
+To extend BiblioModel's capabilities, the following features are planned for future implementation:
 
-1. **Exportação de Relatórios em CSV e HTML (TSK-18)**: Export data structures like active loans, books catalog, and readers list into clean formatting via CLI.
-2. **Busca Avançada (TSK-19)**: Enable partial, case-insensitive title and author matching for books and readers.
-3. **Simulação de Notificações por E-mail (TSK-20)**: Automatically check and simulate email warnings for overdue loans using standard library tools.
-4. **SQL Database Adapter**: Transition from local JSON serialization to an SQLite/PostgreSQL concrete repository implementing the outbound `ILibraryRepository` port, enabling concurrent client-server write access.
-5. **Web API Layer**: Package the use cases under a FastAPI/Flask HTTP gateway, exposing RESTful endpoints for remote catalog integration.
-6. **Bulk CSV Importer**: Develop a bootstrap command tool capable of bulk importing thousands of reader and book entities from Excel spreadsheets.
+1. **SQL Database Adapter**: Transition from local JSON serialization to an SQLite/PostgreSQL concrete repository implementing the outbound `ILibraryRepository` port, enabling concurrent client-server write access.
+2. **Web API Layer**: Package the use cases under a FastAPI/Flask HTTP gateway, exposing RESTful endpoints for remote catalog integration.
+3. **Bulk CSV Importer**: Develop a bootstrap command tool capable of bulk importing thousands of reader and book entities from Excel spreadsheets.
 
 ---
 
