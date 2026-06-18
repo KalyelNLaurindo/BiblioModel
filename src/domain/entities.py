@@ -112,13 +112,15 @@ class ReaderEntity:
         name: str,
         status: str = "Active",
         fine_balance: float = 0.0,
-        active_loans: Optional[List[LoanEntity]] = None
+        active_loans: Optional[List[LoanEntity]] = None,
+        reader_type: str = "Regular"
     ) -> None:
         self.reader_id = reader_id
         self.name = name
         self.status = status
         self.fine_balance = fine_balance
         self.active_loans = active_loans if active_loans is not None else []
+        self.reader_type = reader_type
 
     def add_loan(self, loan: LoanEntity) -> None:
         """

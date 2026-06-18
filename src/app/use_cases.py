@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional, Set
 from datetime import date, timedelta
 from src.domain.entities import LoanEntity, BookEntity, ReaderEntity, DomainError, ReaderAutoSuspendedError
 from src.domain.services import FineCalculator
@@ -80,7 +81,66 @@ class ReturnUseCase(IReturnUseCase):
         self.config_provider = config_provider
         self.history_repository = history_repository
 
-    def execute(self, book_id: str, return_date: date) -> LoanEntity:
+    def evaluate_return(
+        self,
+        book_id: str,
+        return_date: date,
+        system_delay: bool = False,
+        book_donation: bool = False
+    ) -> tuple[float, list[dict]]:
+        """
+        Evaluate candidate rules and potential fine amount without modifying any state.
+        Returns (gross_fine, applicable_rules).
+        """
+        book_id = InputValidator.sanitize_and_validate_book_id(book_id)
+        book = self.repository.get_book(book_id)
+        if not book:
+            raise DomainError("Book not found")
+        loan = self.repository.get_active_loan_by_book(book_id)
+        if not loan:
+            raise DomainError("No active loan found for this book")
+        if return_date < loan.checkout_date:
+            raise DomainError("Return date cannot be before checkout date")
+        reader = self.repository.get_reader(loan.reader_id)
+        if not reader:
+            raise DomainError("Reader not found")
+
+        calculator = FineCalculator()
+        daily_rate = self.config_provider.get_daily_fine_rate()
+        grace_period = self.config_provider.get_grace_period_days()
+
+        fine = calculator.calculate_fine(
+            due_date=loan.due_date,
+            return_date=return_date,
+            daily_rate=daily_rate,
+            grace_period_days=grace_period
+        )
+
+        history_records = []
+        if self.history_repository:
+            history_records = self.history_repository.get_history_by_reader(reader.reader_id)
+
+        from src.domain.policy import FinePolicyEngine
+        policy_engine = FinePolicyEngine(self.config_provider)
+        applicable_rules = policy_engine.evaluate_rules(
+            fine_amount=fine,
+            reader=reader,
+            loan=loan,
+            history_records=history_records,
+            system_delay=system_delay,
+            book_donation=book_donation
+        )
+        return fine, applicable_rules
+
+    def execute(
+        self,
+        book_id: str,
+        return_date: date,
+        system_delay: bool = False,
+        book_donation: bool = False,
+        approved_rules: Optional[set[str]] = None,
+        operator: Optional[str] = None
+    ) -> LoanEntity:
         """
         Processes book return, calculates late fee via FineCalculator, updates status, and persists.
         """
@@ -112,9 +172,50 @@ class ReturnUseCase(IReturnUseCase):
             grace_period_days=grace_period
         )
 
+        history_records = []
+        if self.history_repository:
+            history_records = self.history_repository.get_history_by_reader(reader.reader_id)
+
+        from src.domain.policy import FinePolicyEngine
+        policy_engine = FinePolicyEngine(self.config_provider)
+        policy_result = policy_engine.apply(
+            fine_amount=fine,
+            reader=reader,
+            loan=loan,
+            history_records=history_records,
+            system_delay=system_delay,
+            book_donation=book_donation,
+            approved_rules=approved_rules
+        )
+        final_fine = policy_result.final_fine
+
         if fine > 0.0:
-            reader.apply_fine(fine)
-            loan.fine_amount = fine
+            if final_fine > 0.0:
+                reader.apply_fine(final_fine)
+            loan.fine_amount = final_fine
+
+        # Determine operator context
+        if not operator:
+            try:
+                import os
+                operator = os.getlogin()
+            except Exception:
+                try:
+                    import getpass
+                    operator = getpass.getuser()
+                except Exception:
+                    operator = "unknown_operator"
+
+        # Log waiver/discount audit entry if applied
+        if fine > 0.0 and final_fine < fine:
+            import logging
+            logger = logging.getLogger("bibliomodel")
+            applied_str = ", ".join(policy_result.applied_rules)
+            logger.info(
+                f"AUDIT: Discount/Waiver applied for Reader '{reader.reader_id}' on Loan '{loan.loan_id}'. "
+                f"Rules: [{applied_str}] | Original Fine: ${fine:.2f} | Final Fine: ${final_fine:.2f} | "
+                f"Operator: {operator}"
+            )
 
         reader.return_loan(book_id, return_date)
         book.return_book()
@@ -127,7 +228,21 @@ class ReturnUseCase(IReturnUseCase):
             if delay_days < 0:
                 delay_days = 0
             final_status = "RETURNED_LATE" if delay_days > grace_period else "RETURNED_ON_TIME"
-            self.history_repository.archive_loan(loan, book.title, final_status, delay_days)
+            
+            # Save waiver details in the archive record
+            applied_rules_list = policy_result.applied_rules if fine > 0.0 else None
+            orig_fine_val = fine if fine > 0.0 else None
+            opt_val = operator if fine > 0.0 else None
+            
+            self.history_repository.archive_loan(
+                loan,
+                book.title,
+                final_status,
+                delay_days,
+                applied_rules=applied_rules_list,
+                original_fine=orig_fine_val,
+                operator=opt_val
+            )
 
         self.repository.save_book(book)
         self.repository.save_reader(reader)

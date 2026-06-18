@@ -43,6 +43,13 @@ class IConfigProvider(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_fine_policy(self) -> dict:
+        """
+        Get configured fine policies from config file.
+        """
+        pass
+
 
 class ILibraryRepository(ABC):
     """
@@ -198,9 +205,18 @@ class ILoanHistoryRepository(ABC):
     """
 
     @abstractmethod
-    def archive_loan(self, loan: LoanEntity, book_title: str, final_status: str, delay_days: int) -> None:
+    def archive_loan(
+        self,
+        loan: LoanEntity,
+        book_title: str,
+        final_status: str,
+        delay_days: int,
+        applied_rules: Optional[List[str]] = None,
+        original_fine: Optional[float] = None,
+        operator: Optional[str] = None
+    ) -> None:
         """
-        Archive a returned loan into history.
+        Archive a returned loan into history with potential fine waiver details.
         """
         pass
 
