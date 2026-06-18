@@ -62,6 +62,11 @@ class INIConfigAdapter(IConfigProvider):
         except ValueError:
             return DEFAULT_AUTO_SUSPEND_OVERDUE_DAYS
 
+    def get_fine_policy(self) -> dict:
+        if self._config.has_section("fine_policy"):
+            return dict(self._config["fine_policy"])
+        return {}
+
 
 class JSONPersistenceAdapter(ILibraryRepository):
     """
@@ -157,7 +162,8 @@ class JSONPersistenceAdapter(ILibraryRepository):
                 name=rinfo["name"],
                 status=rinfo["status"],
                 fine_balance=rinfo.get("fine_balance", 0.0),
-                active_loans=active_loans_list
+                active_loans=active_loans_list,
+                reader_type=rinfo.get("reader_type", "Regular")
             )
 
         self._books = loaded_books
@@ -222,7 +228,8 @@ class JSONPersistenceAdapter(ILibraryRepository):
                 "name": reader.name,
                 "status": reader.status,
                 "fine_balance": reader.fine_balance,
-                "active_loans": active_loan_ids
+                "active_loans": active_loan_ids,
+                "reader_type": getattr(reader, "reader_type", "Regular")
             }
 
         return {
@@ -364,7 +371,16 @@ class LoanHistoryAdapter(ILoanHistoryRepository):
                     pass
             raise DomainError(f"Failed to persist loan history to disk: {e}")
 
-    def archive_loan(self, loan: LoanEntity, book_title: str, final_status: str, delay_days: int) -> None:
+    def archive_loan(
+        self,
+        loan: LoanEntity,
+        book_title: str,
+        final_status: str,
+        delay_days: int,
+        applied_rules: Optional[List[str]] = None,
+        original_fine: Optional[float] = None,
+        operator: Optional[str] = None
+    ) -> None:
         record = {
             "loan_id": loan.loan_id,
             "book_id": loan.book_id,
@@ -377,6 +393,13 @@ class LoanHistoryAdapter(ILoanHistoryRepository):
             "fine_amount": loan.fine_amount,
             "final_status": final_status
         }
+        if applied_rules is not None:
+            record["applied_rules"] = applied_rules
+        if original_fine is not None:
+            record["original_fine"] = original_fine
+        if operator is not None:
+            record["operator"] = operator
+
         self._history = [r for r in self._history if r["loan_id"] != loan.loan_id]
         self._history.append(record)
         self._save_data()

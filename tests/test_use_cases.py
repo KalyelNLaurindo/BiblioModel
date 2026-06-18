@@ -82,6 +82,9 @@ class FakeConfigProvider(IConfigProvider):
     def get_auto_suspend_overdue_days(self) -> int:
         return self._auto_suspend_overdue_days
 
+    def get_fine_policy(self) -> dict:
+        return {}
+
 
 def test_checkout_success() -> None:
     # Arrange

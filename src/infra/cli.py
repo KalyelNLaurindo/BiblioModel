@@ -242,6 +242,8 @@ class CLIController:
         return_parser = subparsers.add_parser("return")
         return_parser.add_argument("--book", required=True, help="ID of the book being returned")
         return_parser.add_argument("--date", help="Return date in ISO format (YYYY-MM-DD), defaults to today")
+        return_parser.add_argument("--system-delay", action="store_true", help="Flag to indicate institutional system delay")
+        return_parser.add_argument("--book-donation", action="store_true", help="Flag to indicate book donation for fine discount")
 
         # 3. reserve command
         reserve_parser = subparsers.add_parser("reserve")
@@ -363,9 +365,39 @@ class CLIController:
                         )
                         return result_message
                 
+                try:
+                    gross_fine, applicable_rules = self.return_use_case.evaluate_return(
+                        book_id=parsed_args.book,
+                        return_date=return_date,
+                        system_delay=parsed_args.system_delay,
+                        book_donation=parsed_args.book_donation
+                    )
+                except DomainError as err:
+                    status = "validation_error"
+                    result_message = CLIFormatter.format_error(str(err))
+                    return result_message
+
+                approved_rules = set()
+                if gross_fine > 0.0:
+                    for rule in applicable_rules:
+                        if rule.get("requires_approval", False):
+                            rule_name = rule["name"]
+                            discount_pct = int(rule["discount"] * 100)
+                            prompt_msg = f"Rule '{rule_name}' ({discount_pct}% discount) requires operator approval. Apply? (s/n): "
+                            try:
+                                ans = input(prompt_msg).strip().lower()
+                                if ans in ('s', 'sim', 'y', 'yes'):
+                                    approved_rules.add(rule_name)
+                            except (EOFError, IOError):
+                                pass
+
                 loan = self.return_use_case.execute(
                     book_id=parsed_args.book,
-                    return_date=return_date
+                    return_date=return_date,
+                    system_delay=parsed_args.system_delay,
+                    book_donation=parsed_args.book_donation,
+                    approved_rules=approved_rules,
+                    operator=operator
                 )
                 
                 status = "success"
@@ -375,6 +407,7 @@ class CLIController:
                     result_message = CLIFormatter.format_warn(msg)
                 else:
                     result_message = CLIFormatter.format_ok(msg)
+
 
             elif parsed_args.command == "reserve":
                 self.reserve_use_case.execute(

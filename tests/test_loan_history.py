@@ -12,8 +12,17 @@ class FakeLoanHistoryRepository:
     def __init__(self) -> None:
         self.history = []
 
-    def archive_loan(self, loan: LoanEntity, book_title: str, final_status: str, delay_days: int) -> None:
-        self.history.append({
+    def archive_loan(
+        self,
+        loan: LoanEntity,
+        book_title: str,
+        final_status: str,
+        delay_days: int,
+        applied_rules: list = None,
+        original_fine: float = None,
+        operator: str = None
+    ) -> None:
+        record = {
             "loan_id": loan.loan_id,
             "book_id": loan.book_id,
             "book_title": book_title,
@@ -24,7 +33,14 @@ class FakeLoanHistoryRepository:
             "delay_days": delay_days,
             "fine_amount": loan.fine_amount,
             "final_status": final_status
-        })
+        }
+        if applied_rules is not None:
+            record["applied_rules"] = applied_rules
+        if original_fine is not None:
+            record["original_fine"] = original_fine
+        if operator is not None:
+            record["operator"] = operator
+        self.history.append(record)
 
     def get_history_by_reader(self, reader_id: str):
         return [r for r in self.history if r["reader_id"] == reader_id]
