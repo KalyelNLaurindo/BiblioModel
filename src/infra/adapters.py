@@ -4,7 +4,7 @@ import logging
 import configparser
 from datetime import date
 from typing import Optional, Dict, List
-from src.app.ports import IConfigProvider, ILibraryRepository
+from src.app.ports import IConfigProvider, ILibraryRepository, ILoanHistoryRepository
 from src.domain.entities import BookEntity, ReaderEntity, LoanEntity, DomainError
 
 DEFAULT_MAX_LOANS = 3
@@ -323,6 +323,64 @@ class JSONPersistenceAdapter(ILibraryRepository):
             if q in reader.name.lower():
                 results.append(reader)
         return results
+
+
+class LoanHistoryAdapter(ILoanHistoryRepository):
+    """
+    Persists returned loan history in a separate JSON database file atomically.
+    """
+    def __init__(self, file_path: str = "loan_history.json") -> None:
+        self._file_path = file_path
+        self._history: List[dict] = []
+        self._load_data()
+
+    def _load_data(self) -> None:
+        if os.path.exists(self._file_path) and os.path.getsize(self._file_path) > 0:
+            try:
+                with open(self._file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        self._history = data
+                    else:
+                        self._history = []
+            except Exception:
+                self._history = []
+        else:
+            self._history = []
+
+    def _save_data(self) -> None:
+        tmp_path = self._file_path + ".tmp"
+        try:
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                json.dump(self._history, f, indent=2)
+            os.replace(tmp_path, self._file_path)
+        except Exception as e:
+            if os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except Exception:
+                    pass
+            raise DomainError(f"Failed to persist loan history to disk: {e}")
+
+    def archive_loan(self, loan: LoanEntity, book_title: str, final_status: str, delay_days: int) -> None:
+        record = {
+            "loan_id": loan.loan_id,
+            "book_id": loan.book_id,
+            "book_title": book_title,
+            "reader_id": loan.reader_id,
+            "checkout_date": loan.checkout_date.isoformat(),
+            "due_date": loan.due_date.isoformat(),
+            "return_date": loan.return_date.isoformat() if loan.return_date else date.today().isoformat(),
+            "delay_days": delay_days,
+            "fine_amount": loan.fine_amount,
+            "final_status": final_status
+        }
+        self._history = [r for r in self._history if r["loan_id"] != loan.loan_id]
+        self._history.append(record)
+        self._save_data()
+
+    def get_history_by_reader(self, reader_id: str) -> List[dict]:
+        return [r for r in self._history if r["reader_id"] == reader_id]
 
 
 def setup_logger(log_file: str = "bibliomodel.log") -> logging.Logger:

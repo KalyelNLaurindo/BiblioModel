@@ -5,7 +5,7 @@ import os
 import getpass
 from datetime import date
 from typing import List, Optional
-from src.app.ports import ILibraryRepository, IConfigProvider
+from src.app.ports import ILibraryRepository, IConfigProvider, ILoanHistoryRepository
 from src.app.use_cases import CheckoutUseCase, ReturnUseCase, ReserveUseCase, WaiveFineUseCase, GenerateReportUseCase
 from src.domain.entities import DomainError
 from src.app.validators import InputValidator
@@ -178,14 +178,21 @@ class CLIController:
     Parses command arguments and routes execution to target use cases.
     """
 
-    def __init__(self, repository: ILibraryRepository, config_provider: IConfigProvider) -> None:
+    def __init__(self, repository: ILibraryRepository, config_provider: IConfigProvider, history_repository: ILoanHistoryRepository = None) -> None:
         """
         Initializes use case controllers.
         """
         self.repository = repository
         self.config_provider = config_provider
+        
+        if history_repository is None:
+            from src.infra.adapters import LoanHistoryAdapter
+            self.history_repository = LoanHistoryAdapter("loan_history.json")
+        else:
+            self.history_repository = history_repository
+
         self.checkout_use_case = CheckoutUseCase(repository, config_provider)
-        self.return_use_case = ReturnUseCase(repository, config_provider)
+        self.return_use_case = ReturnUseCase(repository, config_provider, self.history_repository)
         self.reserve_use_case = ReserveUseCase(repository)
         self.waive_fine_use_case = WaiveFineUseCase(repository)
         self.generate_report_use_case = GenerateReportUseCase(repository)
@@ -285,6 +292,13 @@ class CLIController:
         # 15. check-overdue command
         subparsers.add_parser("check-overdue")
 
+        # 16. reader-history command
+        reader_history_parser = subparsers.add_parser("reader-history")
+        reader_history_parser.add_argument("--reader-id", required=True, help="ID of the reader to query history for")
+        reader_history_parser.add_argument("--last-n", type=int, help="Optional limit of history records to display")
+        reader_history_parser.add_argument("--overdue-only", action="store_true", help="Only show overdue loans")
+        reader_history_parser.add_argument("--export", help="Optional output path to export txt history")
+
         result_message = ""
         status = "unknown"
 
@@ -300,6 +314,8 @@ class CLIController:
             # Apply input validations
             if hasattr(parsed_args, "reader") and parsed_args.reader is not None:
                 parsed_args.reader = InputValidator.sanitize_and_validate_reader_id(parsed_args.reader)
+            if hasattr(parsed_args, "reader_id") and parsed_args.reader_id is not None:
+                parsed_args.reader_id = InputValidator.sanitize_and_validate_reader_id(parsed_args.reader_id)
             if hasattr(parsed_args, "book") and parsed_args.book is not None:
                 parsed_args.book = InputValidator.sanitize_and_validate_book_id(parsed_args.book)
             if hasattr(parsed_args, "operator") and parsed_args.operator is not None:
@@ -726,6 +742,109 @@ class CLIController:
                 result_message = CLIFormatter.format_ok(
                     f"Success: Overdue scan complete. Suspended {suspended_count} readers."
                 )
+
+            elif parsed_args.command == "reader-history":
+                r_id = parsed_args.reader_id
+                reader = self.repository.get_reader(r_id)
+                if not reader:
+                    raise DomainError("Reader not found")
+
+                today = date.today()
+                
+                # 1. Fetch active loans
+                active_records = []
+                from src.domain.services import FineCalculator
+                calc = FineCalculator()
+                daily_rate = self.config_provider.get_daily_fine_rate()
+                grace_period = self.config_provider.get_grace_period_days()
+
+                for loan in reader.active_loans:
+                    book = self.repository.get_book(loan.book_id)
+                    title = book.title if book else "Unknown Book"
+                    
+                    delay = (today - loan.due_date).days
+                    if delay < 0:
+                        delay = 0
+                    fine = calc.calculate_fine(loan.due_date, today, daily_rate, grace_period)
+                    
+                    active_records.append({
+                        "loan_id": loan.loan_id,
+                        "book_id": loan.book_id,
+                        "book_title": title,
+                        "reader_id": loan.reader_id,
+                        "checkout_date": loan.checkout_date.isoformat(),
+                        "due_date": loan.due_date.isoformat(),
+                        "return_date": "Active",
+                        "delay_days": delay,
+                        "fine_amount": fine,
+                        "final_status": "ACTIVE"
+                    })
+
+                # 2. Fetch past history
+                past_records = self.history_repository.get_history_by_reader(r_id)
+
+                # Merge
+                all_records = active_records + past_records
+
+                # Sort by checkout_date descending
+                all_records.sort(key=lambda x: x["checkout_date"], reverse=True)
+
+                # Filter overdue only
+                if parsed_args.overdue_only:
+                    all_records = [r for r in all_records if r["fine_amount"] > 0]
+
+                # Limit by last_n
+                if parsed_args.last_n is not None and parsed_args.last_n > 0:
+                    all_records = all_records[:parsed_args.last_n]
+
+                headers = ["Book Title", "Checkout", "Return", "Delay", "Fine", "Status"]
+                rows = []
+                for r in all_records:
+                    rows.append([
+                        r["book_title"],
+                        r["checkout_date"],
+                        r["return_date"],
+                        str(r["delay_days"]),
+                        f"${r['fine_amount']:.2f}",
+                        r["final_status"]
+                    ])
+
+                table = CLIFormatter.render_table(headers, rows)
+
+                if parsed_args.export:
+                    # Prevent Path Traversal
+                    workspace_dir = os.path.abspath(".")
+                    target_path = os.path.abspath(parsed_args.export)
+                    if not target_path.startswith(workspace_dir):
+                        status = "validation_error"
+                        result_message = CLIFormatter.format_error("Security Error: Export path must be within the project workspace.")
+                        return result_message
+
+                    dir_name = os.path.dirname(target_path)
+                    if dir_name:
+                        os.makedirs(dir_name, exist_ok=True)
+
+                    # Create fixed-width format text
+                    lines = []
+                    lines.append(f"LOAN HISTORY REPORT - READER {r_id} ({reader.name})")
+                    lines.append(f"Generated on: {today.isoformat()}")
+                    lines.append("-" * 95)
+                    header_line = f"{'Book Title':<30} | {'Checkout':<12} | {'Return':<12} | {'Delay':<8} | {'Fine':<10} | {'Status':<15}"
+                    lines.append(header_line)
+                    lines.append("-" * 95)
+                    for row in rows:
+                        row_line = f"{row[0][:30]:<30} | {row[1]:<12} | {row[2]:<12} | {row[3]:<8} | {row[4]:<10} | {row[5]:<15}"
+                        lines.append(row_line)
+                    lines.append("-" * 95)
+                    
+                    with open(target_path, "w", encoding="utf-8") as f:
+                        f.write("\n".join(lines))
+                    
+                    status = "success"
+                    result_message = CLIFormatter.format_ok(f"Success: History exported to {parsed_args.export}\n{table}")
+                else:
+                    status = "success"
+                    result_message = table
 
 
 

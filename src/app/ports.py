@@ -192,5 +192,25 @@ class IGenerateReportUseCase(ABC):
         pass
 
 
+class ILoanHistoryRepository(ABC):
+    """
+    Outbound port defining persistence operations for closed loan histories.
+    """
+
+    @abstractmethod
+    def archive_loan(self, loan: LoanEntity, book_title: str, final_status: str, delay_days: int) -> None:
+        """
+        Archive a returned loan into history.
+        """
+        pass
+
+    @abstractmethod
+    def get_history_by_reader(self, reader_id: str) -> List[dict]:
+        """
+        Retrieve all archived loan history dictionary records for a reader.
+        """
+        pass
+
+
 
 
