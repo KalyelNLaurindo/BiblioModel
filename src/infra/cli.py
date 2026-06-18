@@ -299,6 +299,12 @@ class CLIController:
         reader_history_parser.add_argument("--overdue-only", action="store_true", help="Only show overdue loans")
         reader_history_parser.add_argument("--export", help="Optional output path to export txt history")
 
+        # 17. popularity-report command
+        popularity_report_parser = subparsers.add_parser("popularity-report")
+        popularity_report_parser.add_argument("--top", type=int, help="Limit ranking to top N books")
+        popularity_report_parser.add_argument("--with-waitlist", action="store_true", help="Only show books with a waitlist")
+        popularity_report_parser.add_argument("--underutilized", action="store_true", help="Only show underutilized books (0 checkouts in 90 days)")
+
         result_message = ""
         status = "unknown"
 
@@ -845,6 +851,84 @@ class CLIController:
                 else:
                     status = "success"
                     result_message = table
+
+            elif parsed_args.command == "popularity-report":
+                books = self.repository.list_books()
+                today = date.today()
+                loans = self.repository.list_loans()
+                
+                history_records = []
+                if hasattr(self, "history_repository") and self.history_repository:
+                    history_records = getattr(self.history_repository, "_history", [])
+                
+                book_records = []
+                for book in books:
+                    waitlist_size = len(book.hold_queue)
+                    
+                    has_recent_active = any(
+                        l.book_id == book.book_id and (today - l.checkout_date).days <= 90
+                        for l in loans
+                    )
+                    
+                    has_recent_past = False
+                    for r in history_records:
+                        if r["book_id"] == book.book_id:
+                            try:
+                                chk_dt = date.fromisoformat(r["checkout_date"])
+                                if (today - chk_dt).days <= 90:
+                                    has_recent_past = True
+                                    break
+                            except Exception:
+                                pass
+                                
+                    has_recent_checkout = has_recent_active or has_recent_past
+                    
+                    book_records.append({
+                        "book": book,
+                        "checkout_count": getattr(book, "checkout_count", 0),
+                        "waitlist_size": waitlist_size,
+                        "has_recent_checkout": has_recent_checkout
+                    })
+
+                book_records.sort(key=lambda x: (x["checkout_count"], x["waitlist_size"]), reverse=True)
+
+                if parsed_args.with_waitlist:
+                    book_records = [r for r in book_records if r["waitlist_size"] > 0]
+
+                if parsed_args.underutilized:
+                    book_records = [r for r in book_records if not r["has_recent_checkout"]]
+
+                if parsed_args.top is not None and parsed_args.top > 0:
+                    book_records = book_records[:parsed_args.top]
+
+                headers = ["Rank", "Book ID", "Title", "Checkout Count", "Waitlist Size", "Status"]
+                rows = []
+                for i, r in enumerate(book_records):
+                    rows.append([
+                        str(i + 1),
+                        r["book"].book_id,
+                        r["book"].title,
+                        str(r["checkout_count"]),
+                        str(r["waitlist_size"]),
+                        r["book"].status
+                    ])
+
+                table = CLIFormatter.render_table(headers, rows)
+
+                recommendations = []
+                for r in book_records[:3]:
+                    if r["waitlist_size"] >= 3:
+                        import math
+                        copies = math.ceil(r["waitlist_size"] / 3)
+                        recommendations.append(
+                            f"Recomendação: Adquirir {copies} cópias adicionais de '{r['book'].title}'"
+                        )
+
+                result_message = table
+                if recommendations:
+                    result_message += "\n\nRECOMENDAÇÕES DE AQUISIÇÃO:\n" + "\n".join(recommendations)
+
+                status = "success"
 
 
 
