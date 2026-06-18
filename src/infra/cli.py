@@ -265,6 +265,23 @@ class CLIController:
         # 10. help command
         subparsers.add_parser("help")
 
+        # 11. search-books command
+        search_books_parser = subparsers.add_parser("search-books")
+        search_books_parser.add_argument("query", nargs="?", default="", help="Query to search books by title or author")
+
+        # 12. search-readers command
+        search_readers_parser = subparsers.add_parser("search-readers")
+        search_readers_parser.add_argument("query", nargs="?", default="", help="Query to search readers by name")
+
+        # 13. export command
+        export_parser = subparsers.add_parser("export")
+        export_parser.add_argument("--type", required=True, choices=["books", "readers", "loans"], help="Type of report to export")
+        export_parser.add_argument("--format", required=True, choices=["csv", "html"], help="Format of the report")
+        export_parser.add_argument("--output", help="Optional output path")
+
+        # 14. notify-overdue command
+        subparsers.add_parser("notify-overdue")
+
         result_message = ""
         status = "unknown"
 
@@ -484,6 +501,210 @@ class CLIController:
                         print(CLIFormatter.format_error(f"Shell loop error: {loop_err}"))
                 status = "success"
                 result_message = "Interactive shell closed."
+
+            elif parsed_args.command == "search-books":
+                query = parsed_args.query
+                books = self.repository.search_books(query)
+                headers = ["Book ID", "Title", "Author", "Status", "Hold Queue"]
+                rows = []
+                for b in books:
+                    rows.append([
+                        b.book_id,
+                        b.title,
+                        getattr(b, "author", ""),
+                        b.status,
+                        ", ".join(b.hold_queue) if b.hold_queue else "None"
+                    ])
+                table = CLIFormatter.render_table(headers, rows)
+                status = "success"
+                result_message = table
+
+            elif parsed_args.command == "search-readers":
+                query = parsed_args.query
+                readers = self.repository.search_readers(query)
+                headers = ["Reader ID", "Name", "Status", "Fine Balance", "Active Loans"]
+                rows = []
+                for r in readers:
+                    active_loan_ids = [loan.loan_id for loan in r.active_loans]
+                    rows.append([
+                        r.reader_id,
+                        r.name,
+                        r.status,
+                        f"${r.fine_balance:.2f}",
+                        ", ".join(active_loan_ids) if active_loan_ids else "None"
+                    ])
+                table = CLIFormatter.render_table(headers, rows)
+                status = "success"
+                result_message = table
+
+            elif parsed_args.command == "export":
+                output_path = parsed_args.output
+                if not output_path:
+                    output_path = os.path.join("reports", f"export_{parsed_args.type}_{date.today().isoformat()}.{parsed_args.format}")
+
+                # Prevent Path Traversal
+                workspace_dir = os.path.abspath(".")
+                target_path = os.path.abspath(output_path)
+                if not target_path.startswith(workspace_dir):
+                    status = "validation_error"
+                    result_message = CLIFormatter.format_error("Security Error: Output path must be within the project workspace.")
+                    return result_message
+
+                # Create directory if it doesn't exist
+                dir_name = os.path.dirname(target_path)
+                if dir_name:
+                    os.makedirs(dir_name, exist_ok=True)
+
+                if parsed_args.type == "books":
+                    headers = ["Book ID", "Title", "Author", "Status", "Hold Queue"]
+                    rows = [[b.book_id, b.title, getattr(b, "author", ""), b.status, ", ".join(b.hold_queue)] for b in self.repository.list_books()]
+                elif parsed_args.type == "readers":
+                    headers = ["Reader ID", "Name", "Status", "Fine Balance", "Active Loans"]
+                    rows = [[r.reader_id, r.name, r.status, f"${r.fine_balance:.2f}", ", ".join(l.loan_id for l in r.active_loans)] for r in self.repository.list_readers()]
+                else: # loans
+                    headers = ["Loan ID", "Book ID", "Reader ID", "Checkout Date", "Due Date", "Return Date", "Fine"]
+                    rows = [[l.loan_id, l.book_id, l.reader_id, l.checkout_date.isoformat(), l.due_date.isoformat(), l.return_date.isoformat() if l.return_date else "Active", f"${l.fine_amount:.2f}"] for l in self.repository.list_loans()]
+
+                if parsed_args.format == "csv":
+                    import csv
+                    with open(target_path, "w", newline="", encoding="utf-8") as f:
+                        writer = csv.writer(f)
+                        writer.writerow(headers)
+                        writer.writerows(rows)
+                else: # html
+                    rows_html = ""
+                    for row in rows:
+                        cols_html = "".join(f"<td style='padding: 8px; border: 1px solid #ddd;'>{cell}</td>" for cell in row)
+                        rows_html += f"<tr>{cols_html}</tr>"
+                    headers_html = "".join(f"<th style='padding: 8px; border: 1px solid #ddd; background-color: #f4f4f4; text-align: left;'>{h}</th>" for h in headers)
+                    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Library Report - {parsed_args.type.capitalize()}</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 20px; color: #333; }}
+        table {{ border-collapse: collapse; width: 100%; margin-top: 15px; }}
+        h1 {{ color: #2c3e50; }}
+    </style>
+</head>
+<body>
+    <h1>Library Report: {parsed_args.type.capitalize()}</h1>
+    <p>Generated on: {date.today().isoformat()}</p>
+    <table>
+        <thead>
+            <tr>{headers_html}</tr>
+        </thead>
+        <tbody>
+            {rows_html}
+        </tbody>
+    </table>
+</body>
+</html>"""
+                    with open(target_path, "w", encoding="utf-8") as f:
+                        f.write(html_content)
+
+                status = "success"
+                result_message = CLIFormatter.format_ok(f"Success: Report exported to {output_path}")
+
+            elif parsed_args.command == "notify-overdue":
+                loans = self.repository.list_loans()
+                today = date.today()
+                overdue_loans = [l for l in loans if l.is_overdue(today)]
+                
+                # Group by reader
+                reader_overdues = {}
+                for l in overdue_loans:
+                    reader_overdues.setdefault(l.reader_id, []).append(l)
+                
+                if not reader_overdues:
+                    status = "success"
+                    result_message = CLIFormatter.format_ok("No overdue loans found.")
+                    return result_message
+                
+                # Setup folder
+                notif_dir = os.path.abspath(os.path.join(".", "notifications"))
+                os.makedirs(notif_dir, exist_ok=True)
+                
+                # Import FineCalculator to calculate fines for notification details
+                from src.domain.services import FineCalculator
+                calc = FineCalculator()
+                daily_rate = self.config_provider.get_daily_fine_rate()
+                grace_period = self.config_provider.get_grace_period_days()
+                
+                # Check for SMTP config
+                import configparser
+                config_file = "config.ini"
+                has_smtp = False
+                smtp_host = ""
+                smtp_port = 1025
+                smtp_sender = "library@example.com"
+                if os.path.exists(config_file):
+                    try:
+                        parser_ini = configparser.ConfigParser()
+                        parser_ini.read(config_file)
+                        if parser_ini.has_section("smtp"):
+                            smtp_host = parser_ini.get("smtp", "host", fallback="")
+                            smtp_port = parser_ini.getint("smtp", "port", fallback=1025)
+                            smtp_sender = parser_ini.get("smtp", "sender", fallback="library@example.com")
+                            if smtp_host:
+                                has_smtp = True
+                    except Exception:
+                        pass
+                
+                success_count = 0
+                for r_id, r_loans in reader_overdues.items():
+                    reader = self.repository.get_reader(r_id)
+                    if not reader:
+                        continue # robustness: skip if reader not found
+                    
+                    # Compute expected fine
+                    total_fine = 0.0
+                    books_lines = []
+                    for l in r_loans:
+                        book = self.repository.get_book(l.book_id)
+                        title = book.title if book else "Unknown Book"
+                        fine = calc.calculate_fine(l.due_date, today, daily_rate, grace_period)
+                        total_fine += fine
+                        books_lines.append(f" - '{title}' (Due: {l.due_date.isoformat()}, Estimated Fine: ${fine:.2f})")
+                    
+                    msg = f"Dear {reader.name},\n\n"
+                    msg += "This is a notification that you have overdue books in BiblioModel Library:\n"
+                    msg += "\n".join(books_lines) + "\n\n"
+                    msg += f"Total Outstanding Fine Balance: ${reader.fine_balance + total_fine:.2f}\n\n"
+                    msg += "Return Instructions:\n"
+                    msg += "Please return these books to the library as soon as possible to avoid further fines and suspension.\n"
+                    msg += "Fines accumulate daily.\n\n"
+                    msg += "Best regards,\nBiblioModel Library Management"
+                    
+                    # Save file
+                    file_path = os.path.join(notif_dir, f"email_{r_id}_{today.isoformat()}.txt")
+                    file_written = False
+                    try:
+                        with open(file_path, "w", encoding="utf-8") as f:
+                            f.write(msg)
+                        file_written = True
+                    except Exception as err:
+                        logger.error(f"Failed to write notification file for {r_id}: {err}")
+                    
+                    if file_written:
+                        success_count += 1
+                        if has_smtp:
+                            try:
+                                import smtplib
+                                from email.mime.text import MIMEText
+                                reader_email = f"{r_id.lower()}@example.com"
+                                mime_msg = MIMEText(msg)
+                                mime_msg["Subject"] = "BiblioModel Overdue Book Notification"
+                                mime_msg["From"] = smtp_sender
+                                mime_msg["To"] = reader_email
+                                with smtplib.SMTP(smtp_host, smtp_port, timeout=2) as server:
+                                    server.sendmail(smtp_sender, [reader_email], mime_msg.as_string())
+                            except Exception as smtp_err:
+                                logger.warning(f"SMTP send failed for {r_id}: {smtp_err} (simulated file generated successfully)")
+                
+                status = "success"
+                result_message = CLIFormatter.format_ok(f"Success: Simulated notifications sent to {success_count} readers.")
 
 
 

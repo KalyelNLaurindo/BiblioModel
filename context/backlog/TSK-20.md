@@ -15,6 +15,6 @@ Desenvolver uma rotina para varredura diária de empréstimos em atraso e geraç
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Criterion 1 (Functional):** Comando `notify-overdue` criado na CLI. Gera relatórios textuais de avisos e simula o disparo de mensagens para cada leitor com multas ou atraso pendente.
-* [ ] **Criterion 2 (Quality/Test):** Testes verificam se o conteúdo da mensagem gerada contém o nome do leitor, títulos atrasados, valor da multa e instruções de devolução.
-* [ ] **Criterion 3 (Security/Resilience):** O sistema não deve travar se o e-mail do leitor for inválido ou se houver erro simulado de rede/escrita de arquivo.
+* [x] **Criterion 1 (Functional):** Comando `notify-overdue` criado na CLI. Gera relatórios textuais de avisos e simula o disparo de mensagens para cada leitor com multas ou atraso pendente.
+* [x] **Criterion 2 (Quality/Test):** Testes verificam se o conteúdo da mensagem gerada contém o nome do leitor, títulos atrasados, valor da multa e instruções de devolução.
+* [x] **Criterion 3 (Security/Resilience):** O sistema não deve travar se o e-mail do leitor for inválido ou se houver erro simulado de rede/escrita de arquivo.

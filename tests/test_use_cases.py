@@ -41,6 +41,24 @@ class FakeLibraryRepository(ILibraryRepository):
     def list_loans(self) -> List[LoanEntity]:
         return list(self.loans.values())
 
+    def search_books(self, query: str) -> List[BookEntity]:
+        q = query.lower().strip()
+        results = []
+        for book in self.books.values():
+            title_match = q in book.title.lower()
+            author_match = q in getattr(book, "author", "").lower()
+            if title_match or author_match:
+                results.append(book)
+        return results
+
+    def search_readers(self, query: str) -> List[ReaderEntity]:
+        q = query.lower().strip()
+        results = []
+        for reader in self.readers.values():
+            if q in reader.name.lower():
+                results.append(reader)
+        return results
+
 
 
 class FakeConfigProvider(IConfigProvider):

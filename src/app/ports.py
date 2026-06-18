@@ -105,6 +105,20 @@ class ILibraryRepository(ABC):
         """
         pass
 
+    @abstractmethod
+    def search_books(self, query: str) -> List[BookEntity]:
+        """
+        Search books by partial title or author (case-insensitive).
+        """
+        pass
+
+    @abstractmethod
+    def search_readers(self, query: str) -> List[ReaderEntity]:
+        """
+        Search readers by partial name (case-insensitive).
+        """
+        pass
+
 
 class ICheckoutUseCase(ABC):
     """

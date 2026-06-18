@@ -110,7 +110,8 @@ class JSONPersistenceAdapter(ILibraryRepository):
                 book_id=binfo["id"],
                 title=binfo["title"],
                 status=binfo["status"],
-                hold_queue=binfo.get("hold_queue", [])
+                hold_queue=binfo.get("hold_queue", []),
+                author=binfo.get("author", "")
             )
 
         for lid, linfo in loans_data.items():
@@ -187,6 +188,7 @@ class JSONPersistenceAdapter(ILibraryRepository):
             books_data[bid] = {
                 "id": book.book_id,
                 "title": book.title,
+                "author": book.author,
                 "status": book.status,
                 "hold_queue": book.hold_queue
             }
@@ -296,6 +298,24 @@ class JSONPersistenceAdapter(ILibraryRepository):
 
     def list_loans(self) -> List[LoanEntity]:
         return list(self._loans.values())
+
+    def search_books(self, query: str) -> List[BookEntity]:
+        q = query.lower().strip()
+        results = []
+        for book in self._books.values():
+            title_match = q in book.title.lower()
+            author_match = q in getattr(book, "author", "").lower()
+            if title_match or author_match:
+                results.append(book)
+        return results
+
+    def search_readers(self, query: str) -> List[ReaderEntity]:
+        q = query.lower().strip()
+        results = []
+        for reader in self._readers.values():
+            if q in reader.name.lower():
+                results.append(reader)
+        return results
 
 
 def setup_logger(log_file: str = "bibliomodel.log") -> logging.Logger:
