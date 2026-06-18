@@ -27,13 +27,15 @@ class BookEntity:
         title: str,
         status: str = "Available",
         hold_queue: list[str] = None,
-        author: str = ""
+        author: str = "",
+        checkout_count: int = 0
     ) -> None:
         self.book_id = book_id
         self.title = title
         self.status = status
         self.hold_queue = hold_queue if hold_queue is not None else []
         self.author = author
+        self.checkout_count = checkout_count
 
     def reserve(self, reader_id: str) -> None:
         """

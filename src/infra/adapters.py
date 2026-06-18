@@ -118,7 +118,8 @@ class JSONPersistenceAdapter(ILibraryRepository):
                 title=binfo["title"],
                 status=binfo["status"],
                 hold_queue=binfo.get("hold_queue", []),
-                author=binfo.get("author", "")
+                author=binfo.get("author", ""),
+                checkout_count=binfo.get("checkout_count", 0)
             )
 
         for lid, linfo in loans_data.items():
@@ -197,7 +198,8 @@ class JSONPersistenceAdapter(ILibraryRepository):
                 "title": book.title,
                 "author": book.author,
                 "status": book.status,
-                "hold_queue": book.hold_queue
+                "hold_queue": book.hold_queue,
+                "checkout_count": getattr(book, "checkout_count", 0)
             }
 
         loans_data = {}

@@ -47,6 +47,7 @@ class CheckoutUseCase(ICheckoutUseCase):
             raise DomainError("Reader active loans limit reached")
 
         book.loan_to(reader_id)
+        book.checkout_count += 1
 
         loan_id = str(uuid.uuid4())
         loan_days = self.config_provider.get_loan_period_days()

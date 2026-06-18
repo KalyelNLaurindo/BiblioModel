@@ -156,7 +156,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-23](TSK-23.md)]: Book Popularity Ranking & Hold Queue Stats**  
   * *Epic Link:* FT-08 (Collection Analytics & Acquisition Planning)  
   * *RICE Score:* 60.0 (Medium Priority / Should Have) | Reach: 60 / Impact: 2 / Confidence: 1.0 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 * **[[TSK-24](TSK-24.md)]: Fine Waiver & Discount Policy Engine**  
   * *Epic Link:* FT-09 (Policy & Rule Engine)  
   * *RICE Score:* 54.0 (Medium Priority / Could Have) | Reach: 90 / Impact: 3 / Confidence: 0.8 / Effort: 4  
@@ -170,7 +170,6 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 ### **🔴 To Do (Ready for Development)**
 
 **Phase 8 — Automação de Cobrança & Relatórios Operacionais**
-* [ ] **[[TSK-23](TSK-23.md)]:** Book Popularity Ranking & Hold Queue Stats
 * [ ] **[[TSK-24](TSK-24.md)]:** Fine Waiver & Discount Policy Engine
 
 
@@ -207,6 +206,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-20](TSK-20.md)]:** Simulação de Notificação de Atraso por E-mail
 * [x] **[[TSK-21](TSK-21.md)]:** Overdue Book Auto-Suspension Engine
 * [x] **[[TSK-22](TSK-22.md)]:** Patron Loan History Report
+* [x] **[[TSK-23](TSK-23.md)]:** Book Popularity Ranking & Hold Queue Stats
 
 
 
