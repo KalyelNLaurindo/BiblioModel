@@ -1,6 +1,6 @@
 import uuid
 from datetime import date, timedelta
-from src.domain.entities import LoanEntity, BookEntity, ReaderEntity, DomainError
+from src.domain.entities import LoanEntity, BookEntity, ReaderEntity, DomainError, ReaderAutoSuspendedError
 from src.domain.services import FineCalculator
 from src.app.ports import ILibraryRepository, IConfigProvider, ICheckoutUseCase, IReturnUseCase, IReserveUseCase, IWaiveFineUseCase, IGenerateReportUseCase
 from src.app.validators import InputValidator
@@ -29,7 +29,15 @@ class CheckoutUseCase(ICheckoutUseCase):
         if not book:
             raise DomainError("Book not found")
 
-        reader.update_status(checkout_date)
+        auto_suspend_days = self.config_provider.get_auto_suspend_overdue_days()
+        has_critical_overdue = any(
+            loan.return_date is None and (checkout_date - loan.due_date).days >= auto_suspend_days
+            for loan in reader.active_loans
+        )
+        if has_critical_overdue:
+            raise ReaderAutoSuspendedError("Reader has critical overdue loans and is auto-suspended")
+
+        reader.update_status(checkout_date, auto_suspend_days)
 
         if reader.status == "Suspended":
             raise DomainError("Reader is suspended")
@@ -109,7 +117,8 @@ class ReturnUseCase(IReturnUseCase):
         reader.return_loan(book_id, return_date)
         book.return_book()
 
-        reader.update_status(return_date)
+        auto_suspend_days = self.config_provider.get_auto_suspend_overdue_days()
+        reader.update_status(return_date, auto_suspend_days)
 
         self.repository.save_book(book)
         self.repository.save_reader(reader)

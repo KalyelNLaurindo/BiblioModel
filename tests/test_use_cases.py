@@ -62,9 +62,10 @@ class FakeLibraryRepository(ILibraryRepository):
 
 
 class FakeConfigProvider(IConfigProvider):
-    def __init__(self, max_loans: int = 3, loan_period_days: int = 7) -> None:
+    def __init__(self, max_loans: int = 3, loan_period_days: int = 7, auto_suspend_overdue_days: int = 14) -> None:
         self._max_loans = max_loans
         self._loan_period_days = loan_period_days
+        self._auto_suspend_overdue_days = auto_suspend_overdue_days
 
     def get_max_loans(self) -> int:
         return self._max_loans
@@ -77,6 +78,9 @@ class FakeConfigProvider(IConfigProvider):
 
     def get_grace_period_days(self) -> int:
         return 0
+
+    def get_auto_suspend_overdue_days(self) -> int:
+        return self._auto_suspend_overdue_days
 
 
 def test_checkout_success() -> None:
