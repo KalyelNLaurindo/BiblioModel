@@ -133,25 +133,48 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-18](TSK-18.md)]: Exportação de Relatórios em CSV e HTML**  
   * *Epic Link:* FT-05 (CLI & Alerts Router)  
   * *RICE Score:* 80.0 (Medium Priority / Should Have) | Reach: 80 / Impact: 2 / Confidence: 1.0 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 * **[[TSK-19](TSK-19.md)]: Busca Avançada de Livros e Leitores**  
   * *Epic Link:* FT-02 & FT-03 (Bounded Domain Objects & Use Case Interactors)  
   * *RICE Score:* 70.0 (Medium Priority / Should Have) | Reach: 70 / Impact: 2 / Confidence: 1.0 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 * **[[TSK-20](TSK-20.md)]: Simulação de Notificação de Atraso por E-mail**  
   * *Epic Link:* FT-05 (CLI & Alerts Router)  
   * *RICE Score:* 53.3 (Medium Priority / Could Have) | Reach: 80 / Impact: 2 / Confidence: 1.0 / Effort: 3  
+  * *Status:* Done  
+
+### **🔗 Phase 8: Automação de Cobrança & Relatórios Operacionais (Backlog Futuro)**
+
+* **[[TSK-21](TSK-21.md)]: Overdue Book Auto-Suspension Engine**  
+  * *Epic Link:* FT-06 (Enforcement & Fine Automation)  
+  * *RICE Score:* 90.0 (High Priority / Must Have) | Reach: 90 / Impact: 2 / Confidence: 1.0 / Effort: 2  
+  * *Status:* To Do  
+* **[[TSK-22](TSK-22.md)]: Patron Loan History Report**  
+  * *Epic Link:* FT-07 (Audit Reports & Director Dashboard)  
+  * *RICE Score:* 80.0 (High Priority / Should Have) | Reach: 80 / Impact: 2 / Confidence: 1.0 / Effort: 2  
+  * *Status:* To Do  
+* **[[TSK-23](TSK-23.md)]: Book Popularity Ranking & Hold Queue Stats**  
+  * *Epic Link:* FT-08 (Collection Analytics & Acquisition Planning)  
+  * *RICE Score:* 60.0 (Medium Priority / Should Have) | Reach: 60 / Impact: 2 / Confidence: 1.0 / Effort: 2  
+  * *Status:* To Do  
+* **[[TSK-24](TSK-24.md)]: Fine Waiver & Discount Policy Engine**  
+  * *Epic Link:* FT-09 (Policy & Rule Engine)  
+  * *RICE Score:* 54.0 (Medium Priority / Could Have) | Reach: 90 / Impact: 3 / Confidence: 0.8 / Effort: 4  
   * *Status:* To Do  
 
 ---
+
 
 ## **3. 📋 Basic Markdown Kanban Board**
 
 ### **🔴 To Do (Ready for Development)**
 
-* [ ] **[[TSK-18](TSK-18.md)]:** Exportação de Relatórios em CSV e HTML
-* [ ] **[[TSK-19](TSK-19.md)]:** Busca Avançada de Livros e Leitores
-* [ ] **[[TSK-20](TSK-20.md)]:** Simulação de Notificação de Atraso por E-mail
+**Phase 8 — Automação de Cobrança & Relatórios Operacionais**
+* [ ] **[[TSK-21](TSK-21.md)]:** Overdue Book Auto-Suspension Engine
+* [ ] **[[TSK-22](TSK-22.md)]:** Patron Loan History Report
+* [ ] **[[TSK-23](TSK-23.md)]:** Book Popularity Ranking & Hold Queue Stats
+* [ ] **[[TSK-24](TSK-24.md)]:** Fine Waiver & Discount Policy Engine
+
 
 ### **🟡 In Progress (Actively Being Built)**
 
@@ -181,6 +204,9 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-11](TSK-11.md)]:** Establish pyproject.toml Configuration and Unified Main Entry Point
 * [x] **[[TSK-16](TSK-16.md)]:** Implement Built-in Help Menu & Documentation System
 * [x] **[[TSK-17](TSK-17.md)]:** Malicious Input Validation and Shell Hardening
+* [x] **[[TSK-18](TSK-18.md)]:** Exportação de Relatórios em CSV e HTML
+* [x] **[[TSK-19](TSK-19.md)]:** Busca Avançada de Livros e Leitores
+* [x] **[[TSK-20](TSK-20.md)]:** Simulação de Notificação de Atraso por E-mail
 
 
 

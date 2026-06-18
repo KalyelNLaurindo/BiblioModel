@@ -15,6 +15,6 @@ Implementar um mecanismo de busca flexível no repositório de dados. O operador
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Criterion 1 (Functional):** Comandos `search-books <query>` e `search-readers <query>` integrados ao CLI e ao Shell Interativo.
-* [ ] **Criterion 2 (Quality/Test):** Testes unitários validam correspondência parcial de strings, filtros vazios e comportamento case-insensitive.
-* [ ] **Criterion 3 (Architecture):** Lógica de busca deve residir em um Domain Service ou ser exposta por novos métodos de consulta no Repository Port.
+* [x] **Criterion 1 (Functional):** Comandos `search-books <query>` e `search-readers <query>` integrados ao CLI e ao Shell Interativo.
+* [x] **Criterion 2 (Quality/Test):** Testes unitários validam correspondência parcial de strings, filtros vazios e comportamento case-insensitive.
+* [x] **Criterion 3 (Architecture):** Lógica de busca deve residir em um Domain Service ou ser exposta por novos métodos de consulta no Repository Port.
