@@ -525,7 +525,16 @@ class CLIController:
 
             elif parsed_args.command == "shell":
                 print(CLIFormatter.get_welcome_banner())
-                print("Type 'exit' or 'quit' to exit the shell.")
+                tip = (
+                    "💡 \033[96m[TIP]\033[0m Type \033[92m'help'\033[0m (without slashes) to view active rules & full command docs.\n\n"
+                    "Recommended Commands:\n"
+                    "  • \033[92mlist-books\033[0m          - Render all books & hold queues\n"
+                    "  • \033[92mlist-readers\033[0m        - Render all readers & fine balances\n"
+                    "  • \033[92mpopularity-report\033[0m   - Show book rankings & waitlists\n"
+                    "  • \033[92mreport\033[0m              - Generate daily handover status report\n"
+                    "  • \033[93mexit\033[0m / \033[93mquit\033[0m         - Close the interactive console\n"
+                )
+                print(tip)
                 import shlex
                 while True:
                     try:

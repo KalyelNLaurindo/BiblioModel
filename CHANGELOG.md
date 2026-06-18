@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-06-18
 
 ### Added
+- **Interactive CLI Shell Usability & Colors (TSK-25)**:
+  - Enhanced interactive `shell` startup screen with guidelines written in English.
+  - Formatted the tip and recommended command shortcuts with ANSI escape color sequences.
 - **Fine Waiver & Discount Policy Engine (TSK-24)**:
   - Created `FinePolicyEngine` in `src/domain/policy.py` to calculate fine reductions based on configurable rules.
   - Implemented rules for PCD waiver (100%), institutional system delay waiver (100%), book donation discount (50%), and first offense discount (25%).

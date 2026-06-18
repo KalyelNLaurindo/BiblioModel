@@ -161,6 +161,10 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
   * *Epic Link:* FT-09 (Policy & Rule Engine)  
   * *RICE Score:* 54.0 (Medium Priority / Could Have) | Reach: 90 / Impact: 3 / Confidence: 0.8 / Effort: 4  
   * *Status:* Done  
+* **[[TSK-25](TSK-25.md)]: Interactive CLI Shell Startup Usability & Colors**  
+  * *Epic Link:* FT-05 (CLI & Alerts Router)  
+  * *RICE Score:* 64.0 (Medium Priority / Should Have) | Reach: 80 / Impact: 1 / Confidence: 1.0 / Effort: 1  
+  * *Status:* Done  
 
 ---
 
@@ -208,6 +212,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-22](TSK-22.md)]:** Patron Loan History Report
 * [x] **[[TSK-23](TSK-23.md)]:** Book Popularity Ranking & Hold Queue Stats
 * [x] **[[TSK-24](TSK-24.md)]:** Fine Waiver & Discount Policy Engine
+* [x] **[[TSK-25](TSK-25.md)]:** Interactive CLI Shell Startup Usability & Colors
 
 
 
