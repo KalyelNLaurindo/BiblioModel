@@ -15,8 +15,8 @@ Implementar um motor de suspensão automática de leitores que excederam o prazo
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Critério 1 (Configuração):** O `config.ini` suporta o campo `[policy] auto_suspend_overdue_days = N` (padrão: 14 dias). Leitores com qualquer livro em atraso superior a N dias têm o status automaticamente alterado para `SUSPENDED`.
-* [ ] **Critério 2 (Verificação no Checkout):** `CheckoutUseCase.execute()` consulta todos os empréstimos ativos do leitor antes de processar um novo pedido. Se qualquer livro ultrapassou `auto_suspend_overdue_days`, levanta `ReaderAutoSuspendedError` e bloqueia o novo empréstimo.
-* [ ] **Critério 3 (Comando de Varredura):** `bibliomodel check-overdue` executa uma varredura em todos os leitores ativos, aplica suspensão automática conforme a política, e exibe um relatório de quantos leitores foram suspensos nesta execução.
-* [ ] **Critério 4 (Reativação Manual):** A suspensão automática só é revertida após a devolução do livro atrasado E o pagamento da multa pendente, via `ReturnUseCase`. A reativação não pode ser feita por comando direto sem esse fluxo.
-* [ ] **Critério 5 (Qualidade/Testes):** Testes unitários cobrem: leitor com atraso = N-1 dias (ainda ativo), leitor com atraso = N dias (suspenso), tentativa de checkout de leitor suspenso (levanta `ReaderAutoSuspendedError`), e devolução + pagamento reativa o leitor.
+* [x] **Critério 1 (Configuração):** O `config.ini` suporta o campo `[policy] auto_suspend_overdue_days = N` (padrão: 14 dias). Leitores com qualquer livro em atraso superior a N dias têm o status automaticamente alterado para `SUSPENDED`.
+* [x] **Critério 2 (Verificação no Checkout):** `CheckoutUseCase.execute()` consulta todos os empréstimos ativos do leitor antes de processar um novo pedido. Se qualquer livro ultrapassou `auto_suspend_overdue_days`, levanta `ReaderAutoSuspendedError` e bloqueia o novo empréstimo.
+* [x] **Critério 3 (Comando de Varredura):** `bibliomodel check-overdue` executa uma varredura em todos os leitores ativos, aplica suspensão automática conforme a política, e exibe um relatório de quantos leitores foram suspensos nesta execução.
+* [x] **Critério 4 (Reativação Manual):** A suspensão automática só é revertida após a devolução do livro atrasado E o pagamento da multa pendente, via `ReturnUseCase`. A reativação não pode ser feita por comando direto sem esse fluxo.
+* [x] **Critério 5 (Qualidade/Testes):** Testes unitários cobrem: leitor com atraso = N-1 dias (ainda ativo), leitor com atraso = N dias (suspenso), tentativa de checkout de leitor suspenso (levanta `ReaderAutoSuspendedError`), e devolução + pagamento reativa o leitor.

@@ -36,6 +36,13 @@ class IConfigProvider(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_auto_suspend_overdue_days(self) -> int:
+        """
+        Get policy threshold for automatic reader suspension on overdue books.
+        """
+        pass
+
 
 class ILibraryRepository(ABC):
     """

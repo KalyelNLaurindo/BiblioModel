@@ -11,6 +11,7 @@ DEFAULT_MAX_LOANS = 3
 DEFAULT_LOAN_PERIOD_DAYS = 7
 DEFAULT_DAILY_FINE_RATE = 2.00
 DEFAULT_GRACE_PERIOD_DAYS = 0
+DEFAULT_AUTO_SUSPEND_OVERDUE_DAYS = 14
 
 class INIConfigAdapter(IConfigProvider):
     """
@@ -54,6 +55,12 @@ class INIConfigAdapter(IConfigProvider):
             return self._config.getint("library", "grace_period_days", fallback=DEFAULT_GRACE_PERIOD_DAYS)
         except ValueError:
             return DEFAULT_GRACE_PERIOD_DAYS
+
+    def get_auto_suspend_overdue_days(self) -> int:
+        try:
+            return self._config.getint("policy", "auto_suspend_overdue_days", fallback=DEFAULT_AUTO_SUSPEND_OVERDUE_DAYS)
+        except ValueError:
+            return DEFAULT_AUTO_SUSPEND_OVERDUE_DAYS
 
 
 class JSONPersistenceAdapter(ILibraryRepository):

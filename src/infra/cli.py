@@ -282,6 +282,9 @@ class CLIController:
         # 14. notify-overdue command
         subparsers.add_parser("notify-overdue")
 
+        # 15. check-overdue command
+        subparsers.add_parser("check-overdue")
+
         result_message = ""
         status = "unknown"
 
@@ -705,6 +708,24 @@ class CLIController:
                 
                 status = "success"
                 result_message = CLIFormatter.format_ok(f"Success: Simulated notifications sent to {success_count} readers.")
+
+            elif parsed_args.command == "check-overdue":
+                readers = self.repository.list_readers()
+                today = date.today()
+                auto_suspend_days = self.config_provider.get_auto_suspend_overdue_days()
+                
+                suspended_count = 0
+                for reader in readers:
+                    old_status = reader.status
+                    reader.update_status(today, auto_suspend_days)
+                    if old_status != "Suspended" and reader.status == "Suspended":
+                        suspended_count += 1
+                        self.repository.save_reader(reader)
+                        
+                status = "success"
+                result_message = CLIFormatter.format_ok(
+                    f"Success: Overdue scan complete. Suspended {suspended_count} readers."
+                )
 
 
 

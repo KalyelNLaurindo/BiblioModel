@@ -9,6 +9,13 @@ class DomainError(Exception):
     pass
 
 
+class ReaderAutoSuspendedError(DomainError):
+    """
+    Exception raised when a reader is auto-suspended due to critical book return delays.
+    """
+    pass
+
+
 class BookEntity:
     """
     Represents a physical book. Manages availability states and a FIFO reservation queue.
@@ -147,11 +154,18 @@ class ReaderEntity:
         """
         self.fine_balance = 0.0
 
-    def update_status(self, current_date: date) -> None:
+    def update_status(self, current_date: date, auto_suspend_overdue_days: int = 0) -> None:
         """
-        Suspends the reader if they have unpaid fines or overdue loans, otherwise sets to Active.
+        Suspends the reader if they have unpaid fines or overdue loans beyond policy threshold.
         """
-        has_overdue = any(loan.is_overdue(current_date) for loan in self.active_loans)
+        if auto_suspend_overdue_days > 0:
+            has_overdue = any(
+                loan.return_date is None and (current_date - loan.due_date).days >= auto_suspend_overdue_days
+                for loan in self.active_loans
+            )
+        else:
+            has_overdue = any(loan.is_overdue(current_date) for loan in self.active_loans)
+            
         if self.fine_balance > 0.0 or has_overdue:
             self.status = "Suspended"
         else:
