@@ -130,7 +130,6 @@ BiblioModel/
 ├── pyproject.toml                # Standard setuptools configuration file
 ├── config.ini                    # Core parameter configurations (fine daily rates, limits)
 ├── CHANGELOG.md                  # Detailed history of versions and completed changes
-├── CLAUDE.md                     # Agent context reference guide and build/test commands
 └── README.md                     # Initial setup instructions and documentation
 ```
 
