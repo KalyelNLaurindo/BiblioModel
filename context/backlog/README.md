@@ -165,6 +165,9 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
   * *Epic Link:* FT-05 (CLI & Alerts Router)  
   * *RICE Score:* 64.0 (Medium Priority / Should Have) | Reach: 80 / Impact: 1 / Confidence: 1.0 / Effort: 1  
   * *Status:* Done  
+
+### **⚡ Phase 9: Engenharia Arquitetural Avançada & Resiliência**
+
 * **[[TSK-26](TSK-26.md)]: Implement Unit of Work (UoW) Pattern**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 72.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 2  
@@ -193,6 +196,8 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
   * *RICE Score:* 144.0 (High Priority / Must Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 1  
   * *Status:* To Do  
 
+### **🌐 Phase 9.1: Internacionalização (i18n) & Localização**
+
 * **[[TSK-32](TSK-32.md)]: i18n Core Translation Service & Registry**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 72.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 2  
@@ -203,9 +208,16 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
   * *RICE Score:* 72.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 2  
   * *Status:* To Do  
 
+### **🎨 Phase 9.2: Acessibilidade CLI & Prompt Interativo**
+
 * **[[TSK-34](TSK-34.md)]: Interactive Localized Shell UX & Error Badges**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 213.75 (High Priority / Should Have) | Reach: 95 / Impact: 2.5 / Confidence: 0.9 / Effort: 1  
+  * *Status:* To Do  
+
+* **[[TSK-35](TSK-35.md)]: Library CLI A11y Suite (Monochrome high-contrast themes and clean reader streams)**  
+  * *Epic Link:* FT-10 (Architectural Resilience)  
+  * *RICE Score:* 285.0 (High Priority / Should Have) | Reach: 95 / Impact: 3.0 / Confidence: 1.0 / Effort: 1  
   * *Status:* To Do  
 
 
@@ -227,6 +239,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [ ] **[[TSK-32](TSK-32.md)]:** i18n Core Translation Service & Registry
 * [ ] **[[TSK-33](TSK-33.md)]:** UI Presenter CLI Localization Adapter
 * [ ] **[[TSK-34](TSK-34.md)]:** Interactive Localized Shell UX & Error Badges
+* [ ] **[[TSK-35](TSK-35.md)]:** Library CLI A11y Suite (Monochrome high-contrast themes and clean reader streams)
 
 
 
