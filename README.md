@@ -190,6 +190,9 @@ Ensure your modifications pass the repository quality gates before submitting a 
   pytest
   ```
 
+- **Testing & Coverage Policy**:
+  The test suite is built following TDD on the core domain rules and use cases, aiming for 100% code coverage on `src/domain/` and `src/app/`. The console presentation logic (`src/infra/cli.py` and `src/infra/shell.py`) is deliberately excluded from unit tests to prevent test fragility on stdout/formatting layouts.
+
 - **Verify codebase static type alignments**:
 
   ```bash

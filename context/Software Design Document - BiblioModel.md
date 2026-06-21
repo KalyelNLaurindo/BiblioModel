@@ -312,6 +312,12 @@ BiblioModel/
 | **Integration**  | `pytest`             | JSON Adapter serialization, config loading.       | PR commits.                         |
 | **End-to-End**   | CLI integration runs | Full shell command chains.                        | Prior to release build.             |
 
+### **11.1. Testing Policy & Coverage Bounds (SLA Separation)**
+
+To prevent brittle test suites and focus engineering efforts where quality matters most, the project adopts a **Core-Focused Testing Policy**:
+- **Core Domain & Use Cases (100% Target Coverage):** All domain validation rules (loan limits, fine policy formulas, hold priority queues) and application services must maintain 100% code coverage. This is guaranteed by our TDD process, preventing silent regressions in critical business logic.
+- **Infrastructure CLI & Shell (Excluded from Coverage Gate):** The presentation layers (`src/infra/cli.py` and `src/infra/shell.py`) are excluded from unit coverage calculations. Testing terminal print outputs, ANSI color codes, and user input parsers creates fragile test code that is tightly coupled to cosmetic layouts. Instead, these adapters are validated through CLI integration smoke tests and manual verification before release cycles.
+
 ---
 
 ## **📝 12. Architecture Decision Records (ADR)**
