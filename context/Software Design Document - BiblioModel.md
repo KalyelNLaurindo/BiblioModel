@@ -283,13 +283,17 @@ BiblioModel/
 │   │
 │   ├── app/                     # Use Cases Orchestrators
 │   │   ├── __init__.py
-│   │   ├── ports.py             # Interface declarations (ILibraryRepository, IConfigProvider)
+│   │   ├── ports.py             # Interface declarations (ILibraryRepository, IConfigProvider, INotificationService, IReportExporter)
 │   │   └── use_cases.py         # CheckoutUseCase, ReturnUseCase, ReserveUseCase
 │   │
-│   └── infra/                   # Infrastructure Adapters (CLI, JSON File, ConfigParser)
+│   └── infra/                   # Infrastructure Adapters (CLI, Shell, SMTP, JSON File, ConfigParser)
 │       ├── __init__.py
 │       ├── adapters.py          # JSONPersistenceAdapter, INIConfigAdapter
-│       └── cli.py               # argparse CLI implementation
+│       ├── smtp_adapter.py      # Concrete SMTP adapter implementation
+│       ├── exporters.py         # Concrete CSV/HTML report exporters
+│       ├── shell.py             # Interactive CLI shell adapter
+│       └── cli.py               # argparse CLI parser and command router
+
 │
 └── tests/                       # Testing suite
     ├── __init__.py

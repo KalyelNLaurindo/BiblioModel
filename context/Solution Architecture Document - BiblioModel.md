@@ -62,7 +62,9 @@ To deliver a high-performance system under strict operational constraints, Bibli
 * **Challenge 3: FIFO Queue Management for Popular Titles**  
   * *Architectural Solution:* Dedicated domain reservation queues. When a book is reserved, the system appends the reader to a first-in, first-out (FIFO) queue attached to the book instance, blocking other checkouts until the hold is resolved.  
 * **Challenge 4: Keeping Rules Configurable Without Modifying Code**  
-  * *Architectural Solution:* Externalized configuration parameters. Fine rates per day, maximum allowable concurrent loans, and default loan durations are kept in a standard configuration file (`config.ini`), permitting easy adjustments by library administrators.
+  * *Architectural Solution:* Externalized configuration parameters. Fine rates per day, maximum allowable concurrent loans, and default loan durations are kept in a standard configuration file (`config.ini`), permitting easy adjustments by library administrators.  
+* **Challenge 5: Single Responsibility Principle (SRP) Violations in Client Interface**  
+  * *Architectural Solution:* Separate CLI routing, console interactivity, external notifications, and data exporting into decoupled ports and adapters. Instead of a single monolithic controller, `CLIController` parses and routes args, handing interactive sessions to `Shell`, and leveraging `INotificationService` and `IReportExporter` ports to drive separate concrete SMTP and CSV/HTML adapters.
 
 ### **3.1. Core Architectural Premises**
 
@@ -207,6 +209,7 @@ graph TD
       
     subgraph BiblioModel_Engine_Container ["⚙️ BiblioModel Engine Core"]  
         Parser[CLI Argparse Commands Parser]  
+        Shell[Interactive CLI Shell Adapter]  
         RulesEngine[Domain Rules Validator & State Engine]  
         
         subgraph Memory_State ["🧠 Memory State Dictionary"]  
@@ -216,16 +219,33 @@ graph TD
         end
         
         BackupService[JSON Serialization & Recovery Adapter]  
+        
+        subgraph Ports_Layer ["🔌 Ports (Abstractions)"]  
+            INotificationService["INotificationService (Port)"]  
+            IReportExporter["IReportExporter (Port)"]  
+        end  
     end
+
+    subgraph Adapters_Layer ["🔌 Adapters (Implementations)"]  
+        SMTPAdapter[SMTP Notification Adapter]  
+        ExportersAdapter[CSV & HTML Exporters]  
+    end  
 
     subgraph Filesystem_Layer ["📂 Local Disk Filesystem"]  
         BackupJSON[(db_backup.json)]  
         ConfigINI["config.ini"]  
+        LocalFiles["daily_handover_report.txt / html / csv"]  
     end
+
+    subgraph External_Systems ["🌐 External Infrastructure"]  
+        SMTPServer["Outbound SMTP Email Server"]  
+    end  
 
     %% Client Interactions  
     OperatorCLI -->|Command arguments| Parser  
+    Parser -->|Delegates shell session| Shell  
     Parser -->|Routes actions| RulesEngine  
+    Shell -->|Invokes commands| RulesEngine  
     RulesEngine <-->|Queries & Updates status| Memory_State  
     
     %% Storage Flows  
@@ -233,6 +253,16 @@ graph TD
     RulesEngine -->|Triggers save| BackupService  
     BackupService -->|Atomic file write| BackupJSON  
     BackupJSON -->|Loads database on boot| RulesEngine  
+
+    %% Decoupled Outbound Boundaries  
+    RulesEngine -->|Notifies overdue status| INotificationService  
+    RulesEngine -->|Requests exports| IReportExporter  
+    
+    INotificationService -->|Implemented by| SMTPAdapter  
+    IReportExporter -->|Implemented by| ExportersAdapter  
+
+    SMTPAdapter -->|Sends emails| SMTPServer  
+    ExportersAdapter -->|Writes exports| LocalFiles  
       
     %% Styling  
     style BackupJSON fill:#fff,stroke:#f00,stroke-width:2px,stroke-dasharray: 5 5  
