@@ -57,7 +57,8 @@ To deliver a high-performance system under strict operational constraints, Bibli
 * **Challenge 1: Rapid Validation of Patron Eligibility & Book Availability**  
   * *Architectural Solution:* Entirely in-memory domain entities (using Python dictionaries and class-based domain relationships). This guarantees sub-millisecond status checks, ensuring checkouts complete immediately without database roundtrips.  
 * **Challenge 2: Preventing Data Loss on Power Failures (Durability)**  
-  * *Architectural Solution:* A local-first storage adapter using atomic file writes. Every transaction (loan, return, reservation) triggers a synchronized serialization of the active state to a temporary JSON file, which is then renamed to `db_backup.json` to prevent partial-write corruption.  
+  * *Architectural Solution:* A local-first storage adapter using atomic file writes combined with a Write-Through transaction journal (`transaction_journal.log`). Every transaction triggers a serialization of the active state to a temporary JSON file, which is then renamed to `db_backup.json` (rotating the previous version atomically to `db_backup.json.bak` using `os.replace` directory metadata swaps). This guarantees an RPO of one transaction: in case of a crash, the system restores the backup and replays the uncommitted journal logs on reboot.
+
 * **Challenge 3: FIFO Queue Management for Popular Titles**  
   * *Architectural Solution:* Dedicated domain reservation queues. When a book is reserved, the system appends the reader to a first-in, first-out (FIFO) queue attached to the book instance, blocking other checkouts until the hold is resolved.  
 * **Challenge 4: Keeping Rules Configurable Without Modifying Code**  
@@ -87,7 +88,8 @@ To deliver a high-performance system under strict operational constraints, Bibli
   * *System Action:* The system shifts the book status to `Reserved` and appends Reader R102 to the book's FIFO reservation queue. When B202 is returned, the system automatically marks it as held for Reader R102, preventing others from borrowing it.  
 * **Scenario D (Atomic Save Recovery):**  
   * *Trigger:* The host terminal loses power during a return operation.  
-  * *System Action:* On the next execution, the system reads `db_backup.json` to restore the in-memory state. If a crash occurred mid-write, the system detects a mismatch, falls back to the `.bak` replica, and log an alert for the operator.
+  * *System Action:* On the next execution, the system reads `db_backup.json` to restore the in-memory state. If a crash occurred mid-write, the system detects a corruption, falls back to the `.bak` replica (which was never modified during the write as `os.replace` directory swaps are atomic), and replays uncommitted entries from `transaction_journal.log` to recover the exact last state before power loss, notifying the operator.
+
 
 ### **🎯 4.2. MoSCoW Prioritization Framework**
 

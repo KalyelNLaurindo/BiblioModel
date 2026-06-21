@@ -178,6 +178,12 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
   * *RICE Score:* 48.0 (Medium Priority / Could Have) | Reach: 60 / Impact: 2 / Confidence: 0.8 / Effort: 2  
   * *Status:* To Do  
 
+* **[[TSK-29](TSK-29.md)]: Structured Transaction Journal Logging (Write-Ahead Log)**  
+  * *Epic Link:* FT-10 (Architectural Resilience)  
+  * *RICE Score:* 81.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 0.9 / Effort: 2  
+  * *Status:* To Do  
+
+
 ---
 
 
@@ -189,6 +195,8 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [ ] **[[TSK-26](TSK-26.md)]:** Implement Unit of Work (UoW) Pattern
 * [ ] **[[TSK-27](TSK-27.md)]:** Implement Domain Events & Event Dispatcher
 * [ ] **[[TSK-28](TSK-28.md)]:** Implement Dependency Injection (DI) Container
+* [ ] **[[TSK-29](TSK-29.md)]:** Structured Transaction Journal Logging (Write-Ahead Log)
+
 
 
 ### **🟡 In Progress (Actively Being Built)**

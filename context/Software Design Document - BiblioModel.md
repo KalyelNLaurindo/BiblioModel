@@ -341,11 +341,13 @@ BiblioModel/
 
 ## **🛡️ 14. Resilience & Disaster Recovery Plan (DRP)**
 
-- **Atomic Overwrite Loop:** To prevent file corruption during OS level crashes:
-  1. Serialize data to `db_backup.tmp`.
-  2. Perform an atomic file rename `os.replace("db_backup.tmp", "db_backup.json")`.
-  3. Replicate the active database to `db_backup.json.bak` on success as a rollover backup.
-- **Startup Health Check:** Boot logic parses `db_backup.json`. If serialization errors or structural issues are caught, the system logs an error, automatically copies `db_backup.json.bak` back to the primary, and warns the operator.
+- **Atomic Overwrite Loop & Backup Protection:** To prevent file corruption during OS level crashes:
+  1. Serialize data to `db_backup.json.tmp`.
+  2. Perform an atomic file rename `os.replace("db_backup.json", "db_backup.json.bak")` to rotate the previous valid snapshot to backup.
+  3. Perform an atomic file rename `os.replace("db_backup.json.tmp", "db_backup.json")` to swap the new snapshot into place.
+  *This ensures that a crash during writing only affects the transient `.tmp` file, leaving both `.json` and `.bak` intact. The OS-level directory rename operations are metadata swaps and do not write file content, eliminating synchronous corruption risk.*
+- **Startup Health Check & Transaction Replay:** Boot logic parses `db_backup.json`. If serialization errors or structural issues are caught, the system logs an error, automatically copies `db_backup.json.bak` back to the primary, and warns the operator. If a transaction log (`transaction_journal.log`) exists, it replays any uncommitted operations to minimize recovery point objective (RPO) data loss.
+
 
 ---
 
