@@ -338,6 +338,12 @@ To prevent brittle test suites and focus engineering efforts where quality matte
 - **Decision:** Load configurations from `config.ini` using Python standard library `configparser`.
 - **Rationale:** Enables simple management tweaks, keeping code clean and compliant with "decoupling configurations" paradigms.
 
+### **ADR-003: Transactional Integrity via Unit of Work (UoW)**
+
+- **Context:** Executing multiple separate save operations inside a use case context (e.g. saving a book, saving a reader, and registering a loan) sequentially can cause database inconsistency (split-brain) if the application crashes or faces disk IO exceptions mid-execution.
+- **Decision:** Implement a Unit of Work design pattern using context managers (`with` statements in Python). The context manager stages changes in memory and commits all serialization queries to the JSON file atomically in a single file-write operation upon successful exit. Any raised exceptions trigger a cache rollback.
+- **Rationale:** Guarantees atomic transaction properties (ACID consistency) on a flat-file database model without introducing transactional database servers.
+
 ---
 
 ## **🏛️ 13. Code Governance & Naming Standards**
