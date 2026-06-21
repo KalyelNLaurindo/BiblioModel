@@ -183,6 +183,12 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
   * *RICE Score:* 81.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 0.9 / Effort: 2  
   * *Status:* To Do  
 
+* **[[TSK-30](TSK-30.md)]: Refactor God Class CLIController to Adhere to SRP**  
+  * *Epic Link:* FT-10 (Architectural Resilience)  
+  * *RICE Score:* 144.0 (High Priority / Must Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 1  
+  * *Status:* To Do  
+
+
 
 ---
 
@@ -196,6 +202,8 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [ ] **[[TSK-27](TSK-27.md)]:** Implement Domain Events & Event Dispatcher
 * [ ] **[[TSK-28](TSK-28.md)]:** Implement Dependency Injection (DI) Container
 * [ ] **[[TSK-29](TSK-29.md)]:** Structured Transaction Journal Logging (Write-Ahead Log)
+* [ ] **[[TSK-30](TSK-30.md)]:** Refactor God Class CLIController to Adhere to SRP
+
 
 
 
