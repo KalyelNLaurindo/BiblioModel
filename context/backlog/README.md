@@ -193,6 +193,21 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
   * *RICE Score:* 144.0 (High Priority / Must Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 1  
   * *Status:* To Do  
 
+* **[[TSK-32](TSK-32.md)]: i18n Core Translation Service & Registry**  
+  * *Epic Link:* FT-10 (Architectural Resilience)  
+  * *RICE Score:* 72.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 2  
+  * *Status:* To Do  
+
+* **[[TSK-33](TSK-33.md)]: UI Presenter CLI Localization Adapter**  
+  * *Epic Link:* FT-10 (Architectural Resilience)  
+  * *RICE Score:* 72.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 2  
+  * *Status:* To Do  
+
+* **[[TSK-34](TSK-34.md)]: Interactive Localized Shell UX & Error Badges**  
+  * *Epic Link:* FT-10 (Architectural Resilience)  
+  * *RICE Score:* 213.75 (High Priority / Should Have) | Reach: 95 / Impact: 2.5 / Confidence: 0.9 / Effort: 1  
+  * *Status:* To Do  
+
 
 
 ---
@@ -209,6 +224,9 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [ ] **[[TSK-29](TSK-29.md)]:** Structured Transaction Journal Logging (Write-Ahead Log)
 * [ ] **[[TSK-30](TSK-30.md)]:** Refactor God Class CLIController to Adhere to SRP
 * [ ] **[[TSK-31](TSK-31.md)]:** Testing Coverage Monitoring and CLI Exclusion Policy
+* [ ] **[[TSK-32](TSK-32.md)]:** i18n Core Translation Service & Registry
+* [ ] **[[TSK-33](TSK-33.md)]:** UI Presenter CLI Localization Adapter
+* [ ] **[[TSK-34](TSK-34.md)]:** Interactive Localized Shell UX & Error Badges
 
 
 

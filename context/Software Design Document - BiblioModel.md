@@ -248,6 +248,10 @@ The interface runs in the system terminal using formatted console outputs:
 
 - **Visual Hierarchy:** Clean Unicode indicators (`[OK]`, `[WARN]`, `[ERROR]`, `[HOLD]`).
 - **Micro-interaction:** Real-time console messages outputted to `stdout` (for user info) and `stderr` (for error states).
+- **Multi-Language i18n support:** To ease usability for foreign librarians, UI text resources are detached from core presentation code:
+  * Supported locales: Portuguese (`pt`), English (`en`), French (`fr`), Spanish (`es`), and German (`de`).
+  * Resources are loaded from JSON files in the `locales/` directory.
+  * Active language is resolved using argparse `--lang` flags, configuration settings in `config.ini`, or fallback environmental parameters.
 
 ---
 
