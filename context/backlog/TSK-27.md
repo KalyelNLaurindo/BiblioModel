@@ -3,7 +3,7 @@
 * **Owner / Assignee:** Developer / AI Agent  
 * **Estimated Effort:** 3 Story Points / 12 Hours  
 * **Story / Epic Reference:** FT-10 (Architectural Resilience)
-* **Status:** To Do 🔴
+* **Status:** Done 🟢
 
 ## 📖 Description & Objectives
 
@@ -15,7 +15,7 @@ Desacoplar os Casos de Uso dos seus efeitos colaterais secundários através da 
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Critério 1 (Event Dispatcher):** Desenvolver um despachador de eventos centralizado no domínio permitindo registrar ouvintes e publicar eventos.
-* [ ] **Critério 2 (Eventos Customizados):** Modelar eventos de domínio como objetos de valor imutáveis (`BookLoanedEvent`, `BookReturnedEvent`).
-* [ ] **Critério 3 (Desacoplamento):** Refatorar `ReturnUseCase` e `CheckoutUseCase` para disparar eventos ao invés de acionar logs de auditoria e persistência de histórico diretamente.
-* [ ] **Critério 4 (Testes Unitários):** Validar que disparar um evento ativa corretamente múltiplos ouvintes registrados.
+* [x] **Critério 1 (Event Dispatcher):** Desenvolver um despachador de eventos centralizado no domínio permitindo registrar ouvintes e publicar eventos.
+* [x] **Critério 2 (Eventos Customizados):** Modelar eventos de domínio como objetos de valor imutáveis (`BookLoanedEvent`, `BookReturnedEvent`).
+* [x] **Critério 3 (Desacoplamento):** Refatorar `ReturnUseCase` e `CheckoutUseCase` para disparar eventos ao invés de acionar logs de auditoria e persistência de histórico diretamente.
+* [x] **Critério 4 (Testes Unitários):** Validar que disparar um evento ativa corretamente múltiplos ouvintes registrados.
