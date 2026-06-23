@@ -20,7 +20,7 @@ Tasks:
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **[Testing/Quality - TDD]:** Test cases assert that calling shell commands with environment `NO_COLOR=1` or parameter `--no-color` outputs clean plain-text strings with no escape sequences.
-* [ ] **[Functional - Accessibility]:** CLI implements parameter `--linear` which strips borders and columns, outputting a top-to-bottom list of properties.
-* [ ] **[Functional - Visuals]:** Validation errors translate to clear text banners (e.g. `[ERROR]`) instead of relying solely on red foreground colors.
-* [ ] **[Verification]:** pytest runs successfully with 100% pass rate.
+* [x] **[Testing/Quality - TDD]:** Test cases assert that calling shell commands with environment `NO_COLOR=1` or parameter `--no-color` outputs clean plain-text strings with no escape sequences.
+* [x] **[Functional - Accessibility]:** CLI implements parameter `--linear` which strips borders and columns, outputting a top-to-bottom list of properties.
+* [x] **[Functional - Visuals]:** Validation errors translate to clear text banners (e.g. `[ERROR]`) instead of relying solely on red foreground colors.
+* [x] **[Verification]:** pytest runs successfully with 100% pass rate.

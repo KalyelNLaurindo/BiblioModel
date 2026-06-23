@@ -20,7 +20,7 @@ Tasks:
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **[Testing/Quality - TDD]:** Unit tests verify that calling Presenter methods prints correct language keys mapping depending on active language mock.
-* [ ] **[Functional - Presenter]:** All UI screens, tables (`list-books`, `list-readers`, `list-loans`), and output messages are loaded dynamically from locale translation resource files.
-* [ ] **[Functional - Spacing]:** Renders aligned tabular layouts even when translation keys have varying text lengths.
-* [ ] **[Verification]:** `pytest` tests pass 100% green.
+* [x] **[Testing/Quality - TDD]:** Unit tests verify that calling Presenter methods prints correct language keys mapping depending on active language mock.
+* [x] **[Functional - Presenter]:** All UI screens, tables (`list-books`, `list-readers`, `list-loans`), and output messages are loaded dynamically from locale translation resource files.
+* [x] **[Functional - Spacing]:** Renders aligned tabular layouts even when translation keys have varying text lengths.
+* [x] **[Verification]:** `pytest` tests pass 100% green.

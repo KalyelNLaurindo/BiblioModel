@@ -206,19 +206,19 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-33](TSK-33.md)]: UI Presenter CLI Localization Adapter**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 72.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 
 ### **🎨 Phase 9.2: Acessibilidade CLI & Prompt Interativo**
 
 * **[[TSK-34](TSK-34.md)]: Interactive Localized Shell UX & Error Badges**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 213.75 (High Priority / Should Have) | Reach: 95 / Impact: 2.5 / Confidence: 0.9 / Effort: 1  
-  * *Status:* To Do  
+  * *Status:* Done  
 
 * **[[TSK-35](TSK-35.md)]: Library CLI A11y Suite (Monochrome high-contrast themes and clean reader streams)**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 285.0 (High Priority / Should Have) | Reach: 95 / Impact: 3.0 / Confidence: 1.0 / Effort: 1  
-  * *Status:* To Do  
+  * *Status:* Done  
 
 
 
@@ -229,15 +229,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🔴 To Do (Ready for Development)**
 
-**Phase 9 — Engenharia Arquitetural Avançada (Melhorias Sênior)**
-* [ ] **[[TSK-30](TSK-30.md)]:** Refactor God Class CLIController to Adhere to SRP
-* [ ] **[[TSK-32](TSK-32.md)]:** i18n Core Translation Service & Registry
-* [ ] **[[TSK-33](TSK-33.md)]:** UI Presenter CLI Localization Adapter
-* [ ] **[[TSK-34](TSK-34.md)]:** Interactive Localized Shell UX & Error Badges
-* [ ] **[[TSK-35](TSK-35.md)]:** Library CLI A11y Suite (Monochrome high-contrast themes and clean reader streams)
-
-
-
+* None
 
 ### **🟡 In Progress (Actively Being Built)**
 
@@ -280,8 +272,8 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-27](TSK-27.md)]:** Implement Domain Events & Event Dispatcher
 * [x] **[[TSK-28](TSK-28.md)]:** Implement Dependency Injection (DI) Container
 * [x] **[[TSK-29](TSK-29.md)]:** Structured Transaction Journal Logging (Write-Ahead Log)
-
-
-
-
-
+* [x] **[[TSK-30](TSK-30.md)]:** Refactor God Class CLIController to Adhere to SRP
+* [x] **[[TSK-32](TSK-32.md)]:** i18n Core Translation Service & Registry
+* [x] **[[TSK-33](TSK-33.md)]:** UI Presenter CLI Localization Adapter
+* [x] **[[TSK-34](TSK-34.md)]:** Interactive Localized Shell UX & Error Badges
+* [x] **[[TSK-35](TSK-35.md)]:** Library CLI A11y Suite (Monochrome high-contrast themes and clean reader streams)

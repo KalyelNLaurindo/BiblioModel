@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-06-23
+
+### Added
+- **Dynamic Localization (i18n) & Multi-Language Support (TSK-32 & TSK-33)**:
+  - Formulated dynamic translations in JSON resources across 5 languages (`pt`, `en`, `fr`, `es`, `de`).
+  - Added an override command flag `--lang` to intercept and set language contexts on-the-fly.
+  - Localization of CLI outputs, help menus, database schemas, tables headers, and interactive shell structures.
+  - Robust isolated testing environment with global mocks in `tests/conftest.py`.
+- **Advanced Architecture & Resilience Foundations (Phase 9)**:
+  - **Unit of Work (UoW) Pattern (TSK-26)**: Orchestrates transactional consistency across the domain adapters and entities.
+  - **Domain Events & Dispatcher (TSK-27)**: Publisher-subscriber mechanism facilitating clean side-effect execution inside domain boundaries.
+  - **Dependency Injection (DI) Container (TSK-28)**: Centralized component graphs setup on startup.
+  - **Write-Ahead Logging (WAL) / Transaction Journal (TSK-29)**: Resilient crash recovery logging protocol restoring uncommitted repository state.
+  - **Single Responsibility Principle (SRP) CLI Refactor (TSK-30)**: Split the CLI controller monolith into modular presenter/use-case routers.
+
 ## [1.1.0] - 2026-06-18
 
 ### Added

@@ -82,6 +82,11 @@ The command-line interface is engineered for high operational speed. Use the fol
 > - **Eligibility Bounds:** Readers with active overdue loans or unpaid fines are barred from starting new loans.
 > - **Quantity Limit:** Readers cannot exceed the maximum borrow count (configured in `config.ini`).
 > - **Dates Format:** Dates passed to the CLI must comply with the ISO 8601 `YYYY-MM-DD` format.
+> - **Localization & Multi-Language:** The CLI and Shell support 5 languages (`pt`, `en`, `fr`, `es`, `de`). The language is resolved dynamically following this hierarchy:
+>   1. Passing the `--lang <language_code>` flag on any command (e.g., `python src/main.py list-books --lang es`).
+>   2. Setting `lang` under the `[library]` section in `config.ini` (e.g., `lang = de`).
+>   3. System environment settings (`LC_ALL`, `LC_MESSAGES`, `LANG`) or the system default locale.
+>   4. Default fallback: `"pt"`.
 
 ---
 
@@ -107,6 +112,11 @@ To scale cleanly and maintain quality, the codebase strictly enforces Hexagonal 
 - **TDD-First Enforcement:** Every business behavior is validated by executing test specifications written under `tests/` before implementation.
 - **Atomic Save Protocol:** Write operations serialize to `db_backup.tmp` first, then execute an atomic OS-level rename to replace `db_backup.json` to prevent partial-write corruption on power failures.
 - **FIFO Hold Queue Design:** Popular titles block standard checkouts by maintaining reader queues when a book is in a reserved status.
+- **Unit of Work (UoW) Pattern:** Manages database transaction boundaries, ensuring atomic state operations across multiple entities and adapters.
+- **Domain Events & Event Dispatcher:** Implements publisher-subscriber messaging within the domain, allowing side effects (like audit logs and emails) to run decoupled from the primary command flow.
+- **Dependency Injection (DI) Container:** Handles component dependency graphs and adapter instantiation in a single boot phase.
+- **Write-Ahead Logging (WAL):** Maintains a structural Transaction Journal log to recover uncommitted transactions and avoid database state corruption during crashes.
+- **Dynamic Localization (i18n):** Translates all presenter messages, error badging, help screens, and visual tables dynamically across 5 locales (`pt`, `en`, `fr`, `es`, `de`).
 
 ---
 
@@ -117,27 +127,58 @@ BiblioModel/
 ├── src/                          # System codebase root directory
 │   ├── domain/                   # Bounded domain context (entities, value objects, services)
 │   │   ├── entities.py           # BookEntity, ReaderEntity, LoanEntity classes
+│   │   ├── events.py             # DomainEvent base and concrete domain events
+│   │   ├── policy.py             # FinePolicyEngine (waivers & discounts policies)
 │   │   └── services.py           # FineCalculator rule engine
 │   │
-│   ├── app/                      # Application layer (business use cases)
-│   │   ├── ports.py              # Outbound interface ports (ILibraryRepository)
-│   │   └── use_cases.py          # CheckoutUseCase, ReturnUseCase, ReserveUseCase
+│   ├── app/                      # Application layer (business use cases & port interfaces)
+│   │   ├── ports.py              # Outbound interface ports (ILibraryRepository, IConfigProvider, etc.)
+│   │   ├── use_cases.py          # CheckoutUseCase, ReturnUseCase, ReserveUseCase, WaiveFineUseCase, etc.
+│   │   └── validators.py         # InputValidator for strict path/syntax checks
 │   │
-│   ├── infra/                    # Adaption layer (file systems, terminal integrations)
-│   │   ├── adapters.py           # JSONPersistenceAdapter, INIConfigAdapter
-│   │   └── cli.py                # argparse CLI controller implementation
+│   ├── infra/                    # Adaption layer (file systems, terminal, multi-language)
+│   │   ├── adapters.py           # JSONPersistenceAdapter, INIConfigAdapter, UnitOfWork
+│   │   ├── cli.py                # Command-line presentation and router
+│   │   ├── di.py                 # Dependency Injection Container setup
+│   │   ├── exporters.py          # CSV and HTML report exporting adapters
+│   │   ├── listeners.py          # Decoupled Domain Event listeners (logs & emails)
+│   │   ├── shell.py              # Colored interactive prompt shell
+│   │   ├── smtp_adapter.py       # Mock email SMTP notification adapter
+│   │   └── translation_service.py # Dynamic i18n JSON translation loader
 │   │
 │   └── main.py                   # Unified CLI application entrypoint bootstrap
-├── tests/                        # Validation suite directory
-│   ├── test_domain.py            # Unit tests validating rules and domain entities
-│   ├── test_use_cases.py         # Integration tests validating use case flows
-│   └── test_persistence.py       # Persistence tests (atomic writes & self-healing)
-├── context/                      # Agile management context and sprint backlogs
-│   └── backlog/                  # Kanban board master and atomic task specifications (TSKs)
-├── pyproject.toml                # Standard setuptools configuration file
+├── tests/                        # Comprehensive verification suite directory
+│   ├── conftest.py               # Pytest global setup (environmental isolation)
+│   ├── test_auto_suspension.py   # Validation for automatic reader locks
+│   ├── test_cli_i18n.py          # Multi-language CLI option tests
+│   ├── test_di.py                # Dependency Injection graph tests
+│   ├── test_domain.py            # Unit tests for domain entity state machines
+│   ├── test_events.py            # Pub/Sub event dispatcher tests
+│   ├── test_export.py            # Reports formatting (CSV/HTML) tests
+│   ├── test_i18n.py              # Translation resolution order tests
+│   ├── test_infra.py             # Main CLI controller integrations
+│   ├── test_loan_history.py      # Reader history persistence tests
+│   ├── test_notifications.py     # Overdue mock email generation tests
+│   ├── test_persistence.py       # Atomic backup write & recovery tests
+│   ├── test_policy.py            # Waive fine & discount approval tests
+│   ├── test_popularity.py        # Popularity stats and ordering tests
+│   ├── test_search.py            # Fuzzy book/reader query tests
+│   ├── test_srp.py               # Single Responsibility command delegation tests
+│   ├── test_uow.py               # Unit of Work transaction boundary tests
+│   ├── test_use_cases.py         # Core business use case flow tests
+│   └── test_wal.py               # Write-Ahead Log journal recovery tests
+├── locales/                      # Translation dictionary resources (JSON)
+│   ├── pt.json                   # Portuguese locale strings
+│   ├── en.json                   # English locale strings
+│   ├── es.json                   # Spanish locale strings
+│   ├── fr.json                   # French locale strings
+│   └── de.json                   # German locale strings
+├── context/                      # Sprint backlog and Kanban documents
+│   └── backlog/                  # TSK task definitions & backlog status
+├── pyproject.toml                # Standard python build and dependencies metadata
 ├── config.ini                    # Core parameter configurations (fine daily rates, limits)
-├── CHANGELOG.md                  # Detailed history of versions and completed changes
-└── README.md                     # Initial setup instructions and documentation
+├── CHANGELOG.md                  # Detailed release logs per version
+└── README.md                     # Definitive developer portal guide
 ```
 
 
