@@ -3,17 +3,24 @@ from typing import Optional, Set
 from datetime import date, timedelta
 from src.domain.entities import LoanEntity, BookEntity, ReaderEntity, DomainError, ReaderAutoSuspendedError
 from src.domain.services import FineCalculator
-from src.app.ports import ILibraryRepository, IConfigProvider, ICheckoutUseCase, IReturnUseCase, IReserveUseCase, IWaiveFineUseCase, IGenerateReportUseCase, ILoanHistoryRepository
+from src.app.ports import ILibraryRepository, IConfigProvider, ICheckoutUseCase, IReturnUseCase, IReserveUseCase, IWaiveFineUseCase, IGenerateReportUseCase, ILoanHistoryRepository, IUnitOfWork
 from src.app.validators import InputValidator
+from src.domain.events import EventDispatcher, BookCheckedOutEvent, BookReturnedEvent
 
 class CheckoutUseCase(ICheckoutUseCase):
     """
     Orchestrates domain objects to execute book loans.
     """
 
-    def __init__(self, repository: ILibraryRepository, config_provider: IConfigProvider) -> None:
-        self.repository = repository
+    def __init__(self, repository: ILibraryRepository, config_provider: IConfigProvider, dispatcher: Optional[EventDispatcher] = None) -> None:
+        if isinstance(repository, IUnitOfWork):
+            self.uow = repository
+            self.repository = repository.repository
+        else:
+            self.uow = None
+            self.repository = repository
         self.config_provider = config_provider
+        self.dispatcher = dispatcher
 
     def execute(self, reader_id: str, book_id: str, checkout_date: date) -> LoanEntity:
         """
@@ -22,6 +29,12 @@ class CheckoutUseCase(ICheckoutUseCase):
         reader_id = InputValidator.sanitize_and_validate_reader_id(reader_id)
         book_id = InputValidator.sanitize_and_validate_book_id(book_id)
 
+        if self.uow:
+            with self.uow:
+                return self._execute_transactional(reader_id, book_id, checkout_date)
+        return self._execute_transactional(reader_id, book_id, checkout_date)
+
+    def _execute_transactional(self, reader_id: str, book_id: str, checkout_date: date) -> LoanEntity:
         reader = self.repository.get_reader(reader_id)
         if not reader:
             raise DomainError("Reader not found")
@@ -68,6 +81,16 @@ class CheckoutUseCase(ICheckoutUseCase):
         self.repository.save_reader(reader)
         self.repository.save_loan(loan)
 
+        if self.dispatcher:
+            event = BookCheckedOutEvent(
+                loan_id=loan.loan_id,
+                book_id=book.book_id,
+                reader_id=reader.reader_id,
+                checkout_date=checkout_date,
+                due_date=due_date
+            )
+            self.dispatcher.dispatch(event)
+
         return loan
 
 
@@ -76,10 +99,16 @@ class ReturnUseCase(IReturnUseCase):
     Orchestrates domain objects to process book returns and calculate late fee penalties.
     """
 
-    def __init__(self, repository: ILibraryRepository, config_provider: IConfigProvider, history_repository: ILoanHistoryRepository = None) -> None:
-        self.repository = repository
+    def __init__(self, repository: ILibraryRepository, config_provider: IConfigProvider, history_repository: ILoanHistoryRepository = None, dispatcher: Optional[EventDispatcher] = None) -> None:
+        if isinstance(repository, IUnitOfWork):
+            self.uow = repository
+            self.repository = repository.repository
+        else:
+            self.uow = None
+            self.repository = repository
         self.config_provider = config_provider
         self.history_repository = history_repository
+        self.dispatcher = dispatcher
 
     def evaluate_return(
         self,
@@ -146,6 +175,20 @@ class ReturnUseCase(IReturnUseCase):
         """
         book_id = InputValidator.sanitize_and_validate_book_id(book_id)
 
+        if self.uow:
+            with self.uow:
+                return self._execute_transactional(book_id, return_date, system_delay, book_donation, approved_rules, operator)
+        return self._execute_transactional(book_id, return_date, system_delay, book_donation, approved_rules, operator)
+
+    def _execute_transactional(
+        self,
+        book_id: str,
+        return_date: date,
+        system_delay: bool = False,
+        book_donation: bool = False,
+        approved_rules: Optional[set[str]] = None,
+        operator: Optional[str] = None
+    ) -> LoanEntity:
         book = self.repository.get_book(book_id)
         if not book:
             raise DomainError("Book not found")
@@ -206,43 +249,59 @@ class ReturnUseCase(IReturnUseCase):
                 except Exception:
                     operator = "unknown_operator"
 
-        # Log waiver/discount audit entry if applied
-        if fine > 0.0 and final_fine < fine:
-            import logging
-            logger = logging.getLogger("bibliomodel")
-            applied_str = ", ".join(policy_result.applied_rules)
-            logger.info(
-                f"AUDIT: Discount/Waiver applied for Reader '{reader.reader_id}' on Loan '{loan.loan_id}'. "
-                f"Rules: [{applied_str}] | Original Fine: ${fine:.2f} | Final Fine: ${final_fine:.2f} | "
-                f"Operator: {operator}"
-            )
-
         reader.return_loan(book_id, return_date)
         book.return_book()
 
         auto_suspend_days = self.config_provider.get_auto_suspend_overdue_days()
         reader.update_status(return_date, auto_suspend_days)
 
-        if self.history_repository:
-            delay_days = (return_date - loan.due_date).days
-            if delay_days < 0:
-                delay_days = 0
-            final_status = "RETURNED_LATE" if delay_days > grace_period else "RETURNED_ON_TIME"
-            
-            # Save waiver details in the archive record
-            applied_rules_list = policy_result.applied_rules if fine > 0.0 else None
-            orig_fine_val = fine if fine > 0.0 else None
-            opt_val = operator if fine > 0.0 else None
-            
-            self.history_repository.archive_loan(
-                loan,
-                book.title,
-                final_status,
-                delay_days,
+        delay_days = (return_date - loan.due_date).days
+        if delay_days < 0:
+            delay_days = 0
+        final_status = "RETURNED_LATE" if delay_days > grace_period else "RETURNED_ON_TIME"
+
+        applied_rules_list = list(policy_result.applied_rules) if fine > 0.0 else []
+
+        if self.dispatcher:
+            event = BookReturnedEvent(
+                loan=loan,
+                book_title=book.title,
+                return_date=return_date,
+                fine_amount=final_fine,
+                original_fine=fine,
                 applied_rules=applied_rules_list,
-                original_fine=orig_fine_val,
-                operator=opt_val
+                operator=operator,
+                final_status=final_status,
+                delay_days=delay_days
             )
+            self.dispatcher.dispatch(event)
+        else:
+            # Log waiver/discount audit entry if applied
+            if fine > 0.0 and final_fine < fine:
+                import logging
+                logger = logging.getLogger("bibliomodel")
+                applied_str = ", ".join(policy_result.applied_rules)
+                logger.info(
+                    f"AUDIT: Discount/Waiver applied for Reader '{reader.reader_id}' on Loan '{loan.loan_id}'. "
+                    f"Rules: [{applied_str}] | Original Fine: ${fine:.2f} | Final Fine: ${final_fine:.2f} | "
+                    f"Operator: {operator}"
+                )
+
+            if self.history_repository:
+                # Save waiver details in the archive record
+                applied_rules_list_val = policy_result.applied_rules if fine > 0.0 else None
+                orig_fine_val = fine if fine > 0.0 else None
+                opt_val = operator if fine > 0.0 else None
+                
+                self.history_repository.archive_loan(
+                    loan,
+                    book.title,
+                    final_status,
+                    delay_days,
+                    applied_rules=applied_rules_list_val,
+                    original_fine=orig_fine_val,
+                    operator=opt_val
+                )
 
         self.repository.save_book(book)
         self.repository.save_reader(reader)

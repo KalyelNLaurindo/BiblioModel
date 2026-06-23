@@ -5,10 +5,12 @@ import os
 import getpass
 from datetime import date
 from typing import List, Optional
-from src.app.ports import ILibraryRepository, IConfigProvider, ILoanHistoryRepository
+from src.app.ports import ILibraryRepository, IConfigProvider, ILoanHistoryRepository, INotificationService, IReportExporter
 from src.app.use_cases import CheckoutUseCase, ReturnUseCase, ReserveUseCase, WaiveFineUseCase, GenerateReportUseCase
 from src.domain.entities import DomainError
 from src.app.validators import InputValidator
+from src.domain.events import EventDispatcher
+from src.infra.listeners import bootstrap_listeners
 
 class TestableArgumentParser(argparse.ArgumentParser):
     """
@@ -178,7 +180,20 @@ class CLIController:
     Parses command arguments and routes execution to target use cases.
     """
 
-    def __init__(self, repository: ILibraryRepository, config_provider: IConfigProvider, history_repository: ILoanHistoryRepository = None) -> None:
+    def __init__(
+        self,
+        repository: ILibraryRepository,
+        config_provider: IConfigProvider,
+        history_repository: ILoanHistoryRepository = None,
+        event_dispatcher: EventDispatcher = None,
+        checkout_use_case: CheckoutUseCase = None,
+        return_use_case: ReturnUseCase = None,
+        reserve_use_case: ReserveUseCase = None,
+        waive_fine_use_case: WaiveFineUseCase = None,
+        generate_report_use_case: GenerateReportUseCase = None,
+        notification_service: INotificationService = None,
+        report_exporter: IReportExporter = None
+    ) -> None:
         """
         Initializes use case controllers.
         """
@@ -191,11 +206,30 @@ class CLIController:
         else:
             self.history_repository = history_repository
 
-        self.checkout_use_case = CheckoutUseCase(repository, config_provider)
-        self.return_use_case = ReturnUseCase(repository, config_provider, self.history_repository)
-        self.reserve_use_case = ReserveUseCase(repository)
-        self.waive_fine_use_case = WaiveFineUseCase(repository)
-        self.generate_report_use_case = GenerateReportUseCase(repository)
+        if event_dispatcher is None:
+            self.event_dispatcher = EventDispatcher()
+            bootstrap_listeners(self.event_dispatcher, self.history_repository)
+        else:
+            self.event_dispatcher = event_dispatcher
+
+        self.checkout_use_case = checkout_use_case or CheckoutUseCase(repository, config_provider, dispatcher=self.event_dispatcher)
+        self.return_use_case = return_use_case or ReturnUseCase(repository, config_provider, self.history_repository, dispatcher=self.event_dispatcher)
+        self.reserve_use_case = reserve_use_case or ReserveUseCase(repository)
+        self.waive_fine_use_case = waive_fine_use_case or WaiveFineUseCase(repository)
+        self.generate_report_use_case = generate_report_use_case or GenerateReportUseCase(repository)
+
+        if notification_service is None:
+            from src.infra.smtp_adapter import SMTPNotificationService
+            self.notification_service = SMTPNotificationService(config_provider)
+        else:
+            self.notification_service = notification_service
+
+        if report_exporter is None:
+            from src.infra.exporters import ReportExporter
+            self.report_exporter = ReportExporter()
+        else:
+            self.report_exporter = report_exporter
+
 
 
     def execute(self, args: List[str]) -> str:
@@ -524,50 +558,10 @@ class CLIController:
                 result_message = table
 
             elif parsed_args.command == "shell":
-                print(CLIFormatter.get_welcome_banner())
-                tip = (
-                    "💡 \033[96m[TIP]\033[0m Type \033[92m'help'\033[0m (without slashes) to view active rules & full command docs.\n\n"
-                    "Recommended Commands:\n"
-                    "  • \033[92mlist-books\033[0m          - Render all books & hold queues\n"
-                    "  • \033[92mlist-readers\033[0m        - Render all readers & fine balances\n"
-                    "  • \033[92mpopularity-report\033[0m   - Show book rankings & waitlists\n"
-                    "  • \033[92mreport\033[0m              - Generate daily handover status report\n"
-                    "  • \033[93mexit\033[0m / \033[93mquit\033[0m         - Close the interactive console\n"
-                )
-                print(tip)
-                import shlex
-                while True:
-                    try:
-                        line = input("bibliomodel> ")
-                        if not line.strip():
-                            continue
-                        
-                        try:
-                            cmd_args = shlex.split(line)
-                        except ValueError as shlex_err:
-                            print(CLIFormatter.format_error(f"Command line split error: {shlex_err}"))
-                            continue
-                        
-                        if not cmd_args:
-                            continue
-                        
-                        if cmd_args[0] in ("exit", "quit"):
-                            print("Goodbye!")
-                            break
-                        
-                        if cmd_args[0] == "shell":
-                            print(CLIFormatter.format_error("Already in shell mode."))
-                            continue
-                        
-                        res = self.execute(cmd_args)
-                        print(res)
-                    except (KeyboardInterrupt, EOFError):
-                        print("\nGoodbye!")
-                        break
-                    except Exception as loop_err:
-                        print(CLIFormatter.format_error(f"Shell loop error: {loop_err}"))
+                from src.infra.shell import InteractiveShell
+                shell = InteractiveShell(self)
+                result_message = shell.run()
                 status = "success"
-                result_message = "Interactive shell closed."
 
             elif parsed_args.command == "search-books":
                 query = parsed_args.query
@@ -605,23 +599,6 @@ class CLIController:
                 result_message = table
 
             elif parsed_args.command == "export":
-                output_path = parsed_args.output
-                if not output_path:
-                    output_path = os.path.join("reports", f"export_{parsed_args.type}_{date.today().isoformat()}.{parsed_args.format}")
-
-                # Prevent Path Traversal
-                workspace_dir = os.path.abspath(".")
-                target_path = os.path.abspath(output_path)
-                if not target_path.startswith(workspace_dir):
-                    status = "validation_error"
-                    result_message = CLIFormatter.format_error("Security Error: Output path must be within the project workspace.")
-                    return result_message
-
-                # Create directory if it doesn't exist
-                dir_name = os.path.dirname(target_path)
-                if dir_name:
-                    os.makedirs(dir_name, exist_ok=True)
-
                 if parsed_args.type == "books":
                     headers = ["Book ID", "Title", "Author", "Status", "Hold Queue"]
                     rows = [[b.book_id, b.title, getattr(b, "author", ""), b.status, ", ".join(b.hold_queue)] for b in self.repository.list_books()]
@@ -632,47 +609,22 @@ class CLIController:
                     headers = ["Loan ID", "Book ID", "Reader ID", "Checkout Date", "Due Date", "Return Date", "Fine"]
                     rows = [[l.loan_id, l.book_id, l.reader_id, l.checkout_date.isoformat(), l.due_date.isoformat(), l.return_date.isoformat() if l.return_date else "Active", f"${l.fine_amount:.2f}"] for l in self.repository.list_loans()]
 
-                if parsed_args.format == "csv":
-                    import csv
-                    with open(target_path, "w", newline="", encoding="utf-8") as f:
-                        writer = csv.writer(f)
-                        writer.writerow(headers)
-                        writer.writerows(rows)
-                else: # html
-                    rows_html = ""
-                    for row in rows:
-                        cols_html = "".join(f"<td style='padding: 8px; border: 1px solid #ddd;'>{cell}</td>" for cell in row)
-                        rows_html += f"<tr>{cols_html}</tr>"
-                    headers_html = "".join(f"<th style='padding: 8px; border: 1px solid #ddd; background-color: #f4f4f4; text-align: left;'>{h}</th>" for h in headers)
-                    html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Library Report - {parsed_args.type.capitalize()}</title>
-    <style>
-        body {{ font-family: Arial, sans-serif; margin: 20px; color: #333; }}
-        table {{ border-collapse: collapse; width: 100%; margin-top: 15px; }}
-        h1 {{ color: #2c3e50; }}
-    </style>
-</head>
-<body>
-    <h1>Library Report: {parsed_args.type.capitalize()}</h1>
-    <p>Generated on: {date.today().isoformat()}</p>
-    <table>
-        <thead>
-            <tr>{headers_html}</tr>
-        </thead>
-        <tbody>
-            {rows_html}
-        </tbody>
-    </table>
-</body>
-</html>"""
-                    with open(target_path, "w", encoding="utf-8") as f:
-                        f.write(html_content)
-
-                status = "success"
-                result_message = CLIFormatter.format_ok(f"Success: Report exported to {output_path}")
+                try:
+                    exported_path = self.report_exporter.export_report(
+                        report_type=parsed_args.type,
+                        format_type=parsed_args.format,
+                        headers=headers,
+                        rows=rows,
+                        output_path=parsed_args.output
+                    )
+                    status = "success"
+                    result_message = CLIFormatter.format_ok(f"Success: Report exported to {exported_path}")
+                except PermissionError as perm_err:
+                    status = "validation_error"
+                    result_message = CLIFormatter.format_error(str(perm_err))
+                except Exception as exp_err:
+                    status = "system_error"
+                    result_message = CLIFormatter.format_error(f"System Error: {str(exp_err)}")
 
             elif parsed_args.command == "notify-overdue":
                 loans = self.repository.list_loans()
@@ -688,88 +640,44 @@ class CLIController:
                     status = "success"
                     result_message = CLIFormatter.format_ok("No overdue loans found.")
                     return result_message
-                
-                # Setup folder
-                notif_dir = os.path.abspath(os.path.join(".", "notifications"))
-                os.makedirs(notif_dir, exist_ok=True)
-                
-                # Import FineCalculator to calculate fines for notification details
+
                 from src.domain.services import FineCalculator
                 calc = FineCalculator()
                 daily_rate = self.config_provider.get_daily_fine_rate()
                 grace_period = self.config_provider.get_grace_period_days()
-                
-                # Check for SMTP config
-                import configparser
-                config_file = "config.ini"
-                has_smtp = False
-                smtp_host = ""
-                smtp_port = 1025
-                smtp_sender = "library@example.com"
-                if os.path.exists(config_file):
-                    try:
-                        parser_ini = configparser.ConfigParser()
-                        parser_ini.read(config_file)
-                        if parser_ini.has_section("smtp"):
-                            smtp_host = parser_ini.get("smtp", "host", fallback="")
-                            smtp_port = parser_ini.getint("smtp", "port", fallback=1025)
-                            smtp_sender = parser_ini.get("smtp", "sender", fallback="library@example.com")
-                            if smtp_host:
-                                has_smtp = True
-                    except Exception:
-                        pass
-                
+
                 success_count = 0
                 for r_id, r_loans in reader_overdues.items():
                     reader = self.repository.get_reader(r_id)
                     if not reader:
-                        continue # robustness: skip if reader not found
+                        continue
                     
-                    # Compute expected fine
+                    # Prepare the data needed by INotificationService
                     total_fine = 0.0
-                    books_lines = []
+                    loans_data = []
                     for l in r_loans:
                         book = self.repository.get_book(l.book_id)
                         title = book.title if book else "Unknown Book"
                         fine = calc.calculate_fine(l.due_date, today, daily_rate, grace_period)
                         total_fine += fine
-                        books_lines.append(f" - '{title}' (Due: {l.due_date.isoformat()}, Estimated Fine: ${fine:.2f})")
+                        loans_data.append({
+                            "title": title,
+                            "due_date": l.due_date.isoformat(),
+                            "fine": fine
+                        })
                     
-                    msg = f"Dear {reader.name},\n\n"
-                    msg += "This is a notification that you have overdue books in BiblioModel Library:\n"
-                    msg += "\n".join(books_lines) + "\n\n"
-                    msg += f"Total Outstanding Fine Balance: ${reader.fine_balance + total_fine:.2f}\n\n"
-                    msg += "Return Instructions:\n"
-                    msg += "Please return these books to the library as soon as possible to avoid further fines and suspension.\n"
-                    msg += "Fines accumulate daily.\n\n"
-                    msg += "Best regards,\nBiblioModel Library Management"
-                    
-                    # Save file
-                    file_path = os.path.join(notif_dir, f"email_{r_id}_{today.isoformat()}.txt")
-                    file_written = False
-                    try:
-                        with open(file_path, "w", encoding="utf-8") as f:
-                            f.write(msg)
-                        file_written = True
-                    except Exception as err:
-                        logger.error(f"Failed to write notification file for {r_id}: {err}")
-                    
-                    if file_written:
+                    reader_email = f"{r_id.lower()}@example.com"
+                    sent = self.notification_service.send_overdue_notification(
+                        reader_id=r_id,
+                        reader_name=reader.name,
+                        reader_email=reader_email,
+                        reader_fine_balance=reader.fine_balance + total_fine,
+                        overdue_loans=loans_data,
+                        today=today
+                    )
+                    if sent:
                         success_count += 1
-                        if has_smtp:
-                            try:
-                                import smtplib
-                                from email.mime.text import MIMEText
-                                reader_email = f"{r_id.lower()}@example.com"
-                                mime_msg = MIMEText(msg)
-                                mime_msg["Subject"] = "BiblioModel Overdue Book Notification"
-                                mime_msg["From"] = smtp_sender
-                                mime_msg["To"] = reader_email
-                                with smtplib.SMTP(smtp_host, smtp_port, timeout=2) as server:
-                                    server.sendmail(smtp_sender, [reader_email], mime_msg.as_string())
-                            except Exception as smtp_err:
-                                logger.warning(f"SMTP send failed for {r_id}: {smtp_err} (simulated file generated successfully)")
-                
+
                 status = "success"
                 result_message = CLIFormatter.format_ok(f"Success: Simulated notifications sent to {success_count} readers.")
 

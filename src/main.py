@@ -1,8 +1,15 @@
 import sys
 import logging
-from src.infra.adapters import INIConfigAdapter, JSONPersistenceAdapter, setup_logger
+from src.infra.adapters import INIConfigAdapter, JSONPersistenceAdapter, LoanHistoryAdapter, setup_logger
 from src.infra.cli import CLIController, CLIFormatter
 from src.domain.entities import DomainError
+from src.app.ports import IConfigProvider, ILibraryRepository, ILoanHistoryRepository, INotificationService, IReportExporter
+from src.domain.events import EventDispatcher
+from src.infra.listeners import bootstrap_listeners
+from src.app.use_cases import CheckoutUseCase, ReturnUseCase, ReserveUseCase, WaiveFineUseCase, GenerateReportUseCase
+from src.infra.di import DIContainer
+from src.infra.smtp_adapter import SMTPNotificationService
+from src.infra.exporters import ReportExporter
 
 def main() -> None:
     """
@@ -47,7 +54,46 @@ def main() -> None:
         print(CLIFormatter.format_error(f"Error initializing database: {e}"))
         sys.exit(1)
 
-    controller = CLIController(repo, config)
+    # Bootstrap the Dependency Injection (DI) Container
+    container = DIContainer()
+    
+    # Register Core Infrastructure Adapters
+    container.register(IConfigProvider, config)
+    container.register(ILibraryRepository, repo)
+    container.register(INotificationService, SMTPNotificationService)
+    container.register(IReportExporter, ReportExporter)
+    
+    try:
+        history_repo = LoanHistoryAdapter("loan_history.json")
+    except Exception as e:
+        print(CLIFormatter.format_error(f"Error initializing loan history database: {e}"))
+        sys.exit(1)
+    container.register(ILoanHistoryRepository, history_repo)
+    
+    # Register Pub/Sub Event System
+    container.register(EventDispatcher, EventDispatcher)
+    
+    # Bootstrap and wire up domain event listeners
+    dispatcher = container.resolve(EventDispatcher)
+    bootstrap_listeners(dispatcher, history_repo)
+    
+    # Register Application Use Cases
+    container.register(CheckoutUseCase, CheckoutUseCase)
+    container.register(ReturnUseCase, ReturnUseCase)
+    container.register(ReserveUseCase, ReserveUseCase)
+    container.register(WaiveFineUseCase, WaiveFineUseCase)
+    container.register(GenerateReportUseCase, GenerateReportUseCase)
+    
+    # Register CLI router
+    container.register(CLIController, CLIController)
+
+    # Resolve root controller from the container
+    try:
+        controller = container.resolve(CLIController)
+    except Exception as e:
+        print(CLIFormatter.format_error(f"Error resolving application dependencies: {e}"))
+        sys.exit(1)
+
     args = sys.argv[1:]
     
     try:
