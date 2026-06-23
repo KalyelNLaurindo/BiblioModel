@@ -3,11 +3,13 @@ import logging
 from src.infra.adapters import INIConfigAdapter, JSONPersistenceAdapter, LoanHistoryAdapter, setup_logger
 from src.infra.cli import CLIController, CLIFormatter
 from src.domain.entities import DomainError
-from src.app.ports import IConfigProvider, ILibraryRepository, ILoanHistoryRepository
+from src.app.ports import IConfigProvider, ILibraryRepository, ILoanHistoryRepository, INotificationService, IReportExporter
 from src.domain.events import EventDispatcher
 from src.infra.listeners import bootstrap_listeners
 from src.app.use_cases import CheckoutUseCase, ReturnUseCase, ReserveUseCase, WaiveFineUseCase, GenerateReportUseCase
 from src.infra.di import DIContainer
+from src.infra.smtp_adapter import SMTPNotificationService
+from src.infra.exporters import ReportExporter
 
 def main() -> None:
     """
@@ -58,6 +60,8 @@ def main() -> None:
     # Register Core Infrastructure Adapters
     container.register(IConfigProvider, config)
     container.register(ILibraryRepository, repo)
+    container.register(INotificationService, SMTPNotificationService)
+    container.register(IReportExporter, ReportExporter)
     
     try:
         history_repo = LoanHistoryAdapter("loan_history.json")

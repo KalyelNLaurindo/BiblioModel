@@ -271,6 +271,49 @@ class IUnitOfWork(ABC):
         pass
 
 
+class INotificationService(ABC):
+    """
+    Outbound port for sending overdue notifications.
+    """
+
+    @abstractmethod
+    def send_overdue_notification(
+        self,
+        reader_id: str,
+        reader_name: str,
+        reader_email: str,
+        reader_fine_balance: float,
+        overdue_loans: list,
+        today: date
+    ) -> bool:
+        """
+        Send notification (simulation or SMTP) about overdue loans to a reader.
+        """
+        pass
+
+
+class IReportExporter(ABC):
+    """
+    Outbound port for exporting reports to CSV or HTML formats.
+    """
+
+    @abstractmethod
+    def export_report(
+        self,
+        report_type: str,
+        format_type: str,
+        headers: List[str],
+        rows: List[List[str]],
+        output_path: Optional[str] = None
+    ) -> str:
+        """
+        Export a report to CSV or HTML format and write it to the output path.
+        Returns the path where the report was saved.
+        """
+        pass
+
+
+
 
 
 
