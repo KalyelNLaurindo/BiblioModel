@@ -20,7 +20,7 @@ Tasks:
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **[Functional - Interactive]:** Dynamic switching of active language during a running interactive shell session is possible.
-* [ ] **[Functional - Shell]:** Interactive prompt shows shortcut actions in the active language (e.g. `[L] Switch Language | [Q] Quit`).
-* [ ] **[Functional - Resiliency]:** Reverts table borders and alert icons to ASCII-only format if terminal configuration cannot parse Unicode.
-* [ ] **[Verification]:** `pytest` tests pass 100% green.
+* [x] **[Functional - Interactive]:** Dynamic switching of active language during a running interactive shell session is possible.
+* [x] **[Functional - Shell]:** Interactive prompt shows shortcut actions in the active language (e.g. `[L] Switch Language | [Q] Quit`).
+* [x] **[Functional - Resiliency]:** Reverts table borders and alert icons to ASCII-only format if terminal configuration cannot parse Unicode.
+* [x] **[Verification]:** `pytest` tests pass 100% green.
