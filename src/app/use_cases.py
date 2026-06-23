@@ -3,7 +3,7 @@ from typing import Optional, Set
 from datetime import date, timedelta
 from src.domain.entities import LoanEntity, BookEntity, ReaderEntity, DomainError, ReaderAutoSuspendedError
 from src.domain.services import FineCalculator
-from src.app.ports import ILibraryRepository, IConfigProvider, ICheckoutUseCase, IReturnUseCase, IReserveUseCase, IWaiveFineUseCase, IGenerateReportUseCase, ILoanHistoryRepository
+from src.app.ports import ILibraryRepository, IConfigProvider, ICheckoutUseCase, IReturnUseCase, IReserveUseCase, IWaiveFineUseCase, IGenerateReportUseCase, ILoanHistoryRepository, IUnitOfWork
 from src.app.validators import InputValidator
 
 class CheckoutUseCase(ICheckoutUseCase):
@@ -12,7 +12,12 @@ class CheckoutUseCase(ICheckoutUseCase):
     """
 
     def __init__(self, repository: ILibraryRepository, config_provider: IConfigProvider) -> None:
-        self.repository = repository
+        if isinstance(repository, IUnitOfWork):
+            self.uow = repository
+            self.repository = repository.repository
+        else:
+            self.uow = None
+            self.repository = repository
         self.config_provider = config_provider
 
     def execute(self, reader_id: str, book_id: str, checkout_date: date) -> LoanEntity:
@@ -22,6 +27,12 @@ class CheckoutUseCase(ICheckoutUseCase):
         reader_id = InputValidator.sanitize_and_validate_reader_id(reader_id)
         book_id = InputValidator.sanitize_and_validate_book_id(book_id)
 
+        if self.uow:
+            with self.uow:
+                return self._execute_transactional(reader_id, book_id, checkout_date)
+        return self._execute_transactional(reader_id, book_id, checkout_date)
+
+    def _execute_transactional(self, reader_id: str, book_id: str, checkout_date: date) -> LoanEntity:
         reader = self.repository.get_reader(reader_id)
         if not reader:
             raise DomainError("Reader not found")
@@ -77,7 +88,12 @@ class ReturnUseCase(IReturnUseCase):
     """
 
     def __init__(self, repository: ILibraryRepository, config_provider: IConfigProvider, history_repository: ILoanHistoryRepository = None) -> None:
-        self.repository = repository
+        if isinstance(repository, IUnitOfWork):
+            self.uow = repository
+            self.repository = repository.repository
+        else:
+            self.uow = None
+            self.repository = repository
         self.config_provider = config_provider
         self.history_repository = history_repository
 
@@ -146,6 +162,20 @@ class ReturnUseCase(IReturnUseCase):
         """
         book_id = InputValidator.sanitize_and_validate_book_id(book_id)
 
+        if self.uow:
+            with self.uow:
+                return self._execute_transactional(book_id, return_date, system_delay, book_donation, approved_rules, operator)
+        return self._execute_transactional(book_id, return_date, system_delay, book_donation, approved_rules, operator)
+
+    def _execute_transactional(
+        self,
+        book_id: str,
+        return_date: date,
+        system_delay: bool = False,
+        book_donation: bool = False,
+        approved_rules: Optional[set[str]] = None,
+        operator: Optional[str] = None
+    ) -> LoanEntity:
         book = self.repository.get_book(book_id)
         if not book:
             raise DomainError("Book not found")
