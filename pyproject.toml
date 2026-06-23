@@ -55,3 +55,26 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+
+[tool.coverage.run]
+source = ["src/domain", "src/app"]
+omit = [
+    "src/infra/cli.py",
+    "src/infra/shell.py",
+    "src/main.py",
+]
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "pass",
+    "\\.\\.\\.",
+]
+

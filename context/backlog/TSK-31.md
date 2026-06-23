@@ -22,7 +22,7 @@ This task implements:
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **[Functional - Configuration]:** Add `.coveragerc` or `pyproject.toml` configurations that define the source paths (`src/domain`, `src/app`) and explicitly exclude CLI adapters (`src/infra/cli.py`, `src/infra/shell.py`) from coverage metrics.
-* [ ] **[Functional - Enforcement]:** Set `--cov-fail-under=100` parameter for the covered core layers so that any untested domain rules or use cases break the pipeline.
-* [ ] **[Documentation]:** Update the Software Design Document (SDD) to outline the project's testing hierarchy and the rationale for excluding presentation layers.
-* [ ] **[Verification]:** Executing the test coverage command runs successfully and reports 100% code coverage for the target core modules.
+* [x] **[Functional - Configuration]:** Add `.coveragerc` or `pyproject.toml` configurations that define the source paths (`src/domain`, `src/app`) and explicitly exclude CLI adapters (`src/infra/cli.py`, `src/infra/shell.py`) from coverage metrics.
+* [x] **[Functional - Enforcement]:** Set `--cov-fail-under=100` parameter for the covered core layers so that any untested domain rules or use cases break the pipeline.
+* [x] **[Documentation]:** Update the Software Design Document (SDD) to outline the project's testing hierarchy and the rationale for excluding presentation layers.
+* [x] **[Verification]:** Executing the test coverage command runs successfully and reports 100% code coverage for the target core modules.
