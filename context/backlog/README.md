@@ -184,7 +184,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-29](TSK-29.md)]: Structured Transaction Journal Logging (Write-Ahead Log)**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 81.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 0.9 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 
 * **[[TSK-30](TSK-30.md)]: Refactor God Class CLIController to Adhere to SRP**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
@@ -230,7 +230,6 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 ### **🔴 To Do (Ready for Development)**
 
 **Phase 9 — Engenharia Arquitetural Avançada (Melhorias Sênior)**
-* [ ] **[[TSK-29](TSK-29.md)]:** Structured Transaction Journal Logging (Write-Ahead Log)
 * [ ] **[[TSK-30](TSK-30.md)]:** Refactor God Class CLIController to Adhere to SRP
 * [ ] **[[TSK-32](TSK-32.md)]:** i18n Core Translation Service & Registry
 * [ ] **[[TSK-33](TSK-33.md)]:** UI Presenter CLI Localization Adapter
@@ -280,6 +279,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-26](TSK-26.md)]:** Implement Unit of Work (UoW) Pattern
 * [x] **[[TSK-27](TSK-27.md)]:** Implement Domain Events & Event Dispatcher
 * [x] **[[TSK-28](TSK-28.md)]:** Implement Dependency Injection (DI) Container
+* [x] **[[TSK-29](TSK-29.md)]:** Structured Transaction Journal Logging (Write-Ahead Log)
 
 
 

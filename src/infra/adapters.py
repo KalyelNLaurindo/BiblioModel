@@ -73,8 +73,9 @@ class JSONPersistenceAdapter(ILibraryRepository):
     Persists entities in a local JSON database using atomic write switches and recovery files (.bak).
     """
 
-    def __init__(self, file_path: str = "db_backup.json") -> None:
+    def __init__(self, file_path: str = "db_backup.json", journal_path: str = "transaction_journal.log") -> None:
         self._file_path = file_path
+        self._journal_path = journal_path
         self._books: Dict[str, BookEntity] = {}
         self._readers: Dict[str, ReaderEntity] = {}
         self._loans: Dict[str, LoanEntity] = {}
@@ -174,6 +175,7 @@ class JSONPersistenceAdapter(ILibraryRepository):
     def _load_data(self) -> None:
         """
         Loads data from file path, falling back to backup self-healing logic if corrupted.
+        Replays transaction journal (WAL) on top of backup if restoring.
         """
         try:
             if os.path.exists(self._file_path) and os.path.getsize(self._file_path) > 0:
@@ -190,12 +192,114 @@ class JSONPersistenceAdapter(ILibraryRepository):
                 )
                 try:
                     self._parse_and_validate(bak_path)
+                    
+                    # Replay transaction journal log (WAL) on top of backup
+                    self._replay_journal()
+                    
                     self._recovery_save_to_disk()
-                    logger.warning("Self-healing successful. Primary database restored.")
+                    if os.path.exists(self._journal_path):
+                        try:
+                            with open(self._journal_path, "w", encoding="utf-8") as f:
+                                f.truncate(0)
+                        except Exception:
+                            pass
+                    logger.warning("Self-healing successful. Primary database restored with journal replay.")
                     return
                 except Exception as rec_err:
                     logger.error(f"Self-healing recovery failed: {rec_err}")
             raise DomainError(f"Database file is corrupted and recovery failed: {e}")
+
+    def _append_to_journal(self, action: str, payload: dict) -> None:
+        """
+        Appends a structural transaction action payload to the journal file.
+        Uses fsync to ensure the log line is committed to persistent disk blocks.
+        """
+        entry = {
+            "action": action,
+            "payload": payload
+        }
+        serialized = json.dumps(entry) + "\n"
+        try:
+            with open(self._journal_path, "a", encoding="utf-8") as f:
+                f.write(serialized)
+                f.flush()
+                try:
+                    os.fsync(f.fileno())
+                except Exception:
+                    pass  # Fallback for systems/environments where fsync might fail
+        except Exception as e:
+            raise DomainError(f"Failed to write to transaction journal: {e}")
+
+    def _replay_journal(self) -> None:
+        """
+        Replays transactions from the transaction journal file on top of loaded memory entities.
+        """
+        if not os.path.exists(self._journal_path) or os.path.getsize(self._journal_path) == 0:
+            return
+
+        try:
+            with open(self._journal_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    if not line.strip():
+                        continue
+                    entry = json.loads(line)
+                    action = entry.get("action")
+                    payload = entry.get("payload")
+                    
+                    if action == "save_book":
+                        book = BookEntity(
+                            book_id=payload["id"],
+                            title=payload["title"],
+                            status=payload["status"],
+                            hold_queue=payload.get("hold_queue", []),
+                            author=payload.get("author", ""),
+                            checkout_count=payload.get("checkout_count", 0)
+                        )
+                        self._books[book.book_id] = book
+                        
+                    elif action == "save_loan":
+                        checkout_date = date.fromisoformat(payload["checkout_date"])
+                        due_date = date.fromisoformat(payload["due_date"])
+                        return_date = None
+                        if payload.get("return_date") is not None:
+                            return_date = date.fromisoformat(payload["return_date"])
+                        
+                        loan = LoanEntity(
+                            loan_id=payload["id"],
+                            book_id=payload["book_id"],
+                            reader_id=payload["reader_id"],
+                            checkout_date=checkout_date,
+                            due_date=due_date,
+                            return_date=return_date,
+                            fine_amount=payload.get("fine_applied", 0.0)
+                        )
+                        self._loans[loan.loan_id] = loan
+                        
+                    elif action == "save_reader":
+                        reader = ReaderEntity(
+                            reader_id=payload["id"],
+                            name=payload["name"],
+                            status=payload["status"],
+                            fine_balance=payload.get("fine_balance", 0.0),
+                            active_loans=[],
+                            reader_type=payload.get("reader_type", "Regular")
+                        )
+                        self._readers[reader.reader_id] = reader
+                        reader._temp_active_loan_ids = payload.get("active_loans", [])
+
+            # Hydrate active loans for all readers from self._loans
+            for reader in self._readers.values():
+                temp_ids = getattr(reader, "_temp_active_loan_ids", [])
+                active_loans_list = []
+                for lid in temp_ids:
+                    if lid in self._loans:
+                        active_loans_list.append(self._loans[lid])
+                reader.active_loans = active_loans_list
+                if hasattr(reader, "_temp_active_loan_ids"):
+                    delattr(reader, "_temp_active_loan_ids")
+
+        except Exception as e:
+            raise DomainError(f"Failed to replay transaction journal: {e}")
 
     def _serialize_state(self) -> dict:
         books_data = {}
@@ -242,6 +346,7 @@ class JSONPersistenceAdapter(ILibraryRepository):
     def _save_to_disk(self) -> None:
         """
         Saves states to disk atomically by writing to an intermediate .tmp and swapping.
+        Truncates the transaction journal log upon successful checkpoint.
         """
         serialized = self._serialize_state()
         tmp_path = self._file_path + ".tmp"
@@ -255,6 +360,14 @@ class JSONPersistenceAdapter(ILibraryRepository):
                 os.replace(self._file_path, bak_path)
 
             os.replace(tmp_path, self._file_path)
+
+            # Checkpoint successful: truncate transaction journal to 0 size
+            if os.path.exists(self._journal_path):
+                try:
+                    with open(self._journal_path, "w", encoding="utf-8") as f:
+                        f.truncate(0)
+                except Exception:
+                    pass
         except Exception as e:
             if os.path.exists(tmp_path):
                 try:
@@ -287,6 +400,15 @@ class JSONPersistenceAdapter(ILibraryRepository):
         return self._books.get(book_id)
 
     def save_book(self, book: BookEntity) -> None:
+        serialized_book = {
+            "id": book.book_id,
+            "title": book.title,
+            "author": book.author,
+            "status": book.status,
+            "hold_queue": book.hold_queue,
+            "checkout_count": getattr(book, "checkout_count", 0)
+        }
+        self._append_to_journal("save_book", serialized_book)
         self._books[book.book_id] = book
         if not self._in_transaction:
             self._save_to_disk()
@@ -295,6 +417,16 @@ class JSONPersistenceAdapter(ILibraryRepository):
         return self._readers.get(reader_id)
 
     def save_reader(self, reader: ReaderEntity) -> None:
+        active_loan_ids = [loan.loan_id for loan in reader.active_loans]
+        serialized_reader = {
+            "id": reader.reader_id,
+            "name": reader.name,
+            "status": reader.status,
+            "fine_balance": reader.fine_balance,
+            "active_loans": active_loan_ids,
+            "reader_type": getattr(reader, "reader_type", "Regular")
+        }
+        self._append_to_journal("save_reader", serialized_reader)
         self._readers[reader.reader_id] = reader
         if not self._in_transaction:
             self._save_to_disk()
@@ -306,6 +438,16 @@ class JSONPersistenceAdapter(ILibraryRepository):
         return None
 
     def save_loan(self, loan: LoanEntity) -> None:
+        serialized_loan = {
+            "id": loan.loan_id,
+            "book_id": loan.book_id,
+            "reader_id": loan.reader_id,
+            "checkout_date": loan.checkout_date.isoformat(),
+            "due_date": loan.due_date.isoformat(),
+            "return_date": loan.return_date.isoformat() if loan.return_date else None,
+            "fine_applied": loan.fine_amount
+        }
+        self._append_to_journal("save_loan", serialized_loan)
         self._loans[loan.loan_id] = loan
         if not self._in_transaction:
             self._save_to_disk()
