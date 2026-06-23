@@ -4,7 +4,7 @@ import logging
 import configparser
 from datetime import date
 from typing import Optional, Dict, List
-from src.app.ports import IConfigProvider, ILibraryRepository, ILoanHistoryRepository
+from src.app.ports import IConfigProvider, ILibraryRepository, ILoanHistoryRepository, IUnitOfWork
 from src.domain.entities import BookEntity, ReaderEntity, LoanEntity, DomainError
 
 DEFAULT_MAX_LOANS = 3
@@ -78,6 +78,7 @@ class JSONPersistenceAdapter(ILibraryRepository):
         self._books: Dict[str, BookEntity] = {}
         self._readers: Dict[str, ReaderEntity] = {}
         self._loans: Dict[str, LoanEntity] = {}
+        self._in_transaction = False
         self._load_data()
 
     def clear_cache(self) -> None:
@@ -287,14 +288,16 @@ class JSONPersistenceAdapter(ILibraryRepository):
 
     def save_book(self, book: BookEntity) -> None:
         self._books[book.book_id] = book
-        self._save_to_disk()
+        if not self._in_transaction:
+            self._save_to_disk()
 
     def get_reader(self, reader_id: str) -> Optional[ReaderEntity]:
         return self._readers.get(reader_id)
 
     def save_reader(self, reader: ReaderEntity) -> None:
         self._readers[reader.reader_id] = reader
-        self._save_to_disk()
+        if not self._in_transaction:
+            self._save_to_disk()
 
     def get_active_loan_by_book(self, book_id: str) -> Optional[LoanEntity]:
         for loan in self._loans.values():
@@ -304,7 +307,8 @@ class JSONPersistenceAdapter(ILibraryRepository):
 
     def save_loan(self, loan: LoanEntity) -> None:
         self._loans[loan.loan_id] = loan
-        self._save_to_disk()
+        if not self._in_transaction:
+            self._save_to_disk()
 
     def list_books(self) -> List[BookEntity]:
         return list(self._books.values())
@@ -406,6 +410,49 @@ class LoanHistoryAdapter(ILoanHistoryRepository):
 
     def get_history_by_reader(self, reader_id: str) -> List[dict]:
         return [r for r in self._history if r["reader_id"] == reader_id]
+
+
+class JSONUnitOfWorkAdapter(IUnitOfWork):
+    """
+    Coordinates atomic transactions on top of the JSON persistence layer.
+    """
+
+    def __init__(self, repository: JSONPersistenceAdapter) -> None:
+        self._repository = repository
+        self._committed = False
+
+    @property
+    def repository(self) -> ILibraryRepository:
+        """
+        Exposes the repository managed by this Unit of Work.
+        """
+        return self._repository
+
+    def commit(self) -> None:
+        """
+        Flushes all in-memory repository states to the JSON database.
+        """
+        self._repository._save_to_disk()
+        self._committed = True
+
+    def rollback(self) -> None:
+        """
+        Discards uncommitted changes by reloading the state from disk.
+        """
+        self._repository.clear_cache()
+
+    def __enter__(self) -> "JSONUnitOfWorkAdapter":
+        self._repository._in_transaction = True
+        self._committed = False
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
+        self._repository._in_transaction = False
+        if exc_type is not None:
+            self.rollback()
+        elif not self._committed:
+            self.commit()
+        return False  # Propagate any raised exceptions
 
 
 def setup_logger(log_file: str = "bibliomodel.log") -> logging.Logger:

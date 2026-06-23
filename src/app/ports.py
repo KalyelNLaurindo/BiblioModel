@@ -228,5 +228,49 @@ class ILoanHistoryRepository(ABC):
         pass
 
 
+class IUnitOfWork(ABC):
+    """
+    Interface/Port that coordinates atomic transaction operations across repositories.
+    It guarantees that all operations either succeed completely (commit) or leave the database untouched (rollback).
+    """
+
+    @property
+    @abstractmethod
+    def repository(self) -> ILibraryRepository:
+        """
+        Provides access to the library storage repository during the active transaction.
+        """
+        pass
+
+    @abstractmethod
+    def commit(self) -> None:
+        """
+        Persists all accumulated in-memory changes to the physical storage.
+        """
+        pass
+
+    @abstractmethod
+    def rollback(self) -> None:
+        """
+        Discards all in-memory changes, restoring the state to the last committed backup.
+        """
+        pass
+
+    @abstractmethod
+    def __enter__(self) -> "IUnitOfWork":
+        """
+        Begins a new secure transaction boundary context.
+        """
+        pass
+
+    @abstractmethod
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
+        """
+        Closes the transaction boundary context. Automatically rolls back on failure or commits on success.
+        """
+        pass
+
+
+
 
 
