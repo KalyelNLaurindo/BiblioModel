@@ -5,7 +5,7 @@ import os
 import getpass
 from datetime import date
 from typing import List, Optional
-from src.app.ports import ILibraryRepository, IConfigProvider, ILoanHistoryRepository, INotificationService, IReportExporter
+from src.app.ports import ILibraryRepository, IConfigProvider, ILoanHistoryRepository, INotificationService, IReportExporter, ITranslationService
 from src.app.use_cases import CheckoutUseCase, ReturnUseCase, ReserveUseCase, WaiveFineUseCase, GenerateReportUseCase
 from src.domain.entities import DomainError
 from src.app.validators import InputValidator
@@ -29,27 +29,102 @@ class CLIFormatter:
     """
     Formats CLI messages with status badges and draws ASCII tables.
     """
-    @staticmethod
-    def format_ok(message: str) -> str:
-        return f"🟢 \033[92m[OK]\033[0m {message}"
+    force_ascii: bool = False
+    no_color: bool = False
+    force_linear: bool = False
+    _supports_unicode: Optional[bool] = None
 
-    @staticmethod
-    def format_warn(message: str) -> str:
-        return f"🟡 \033[93m[WARN]\033[0m {message}"
+    @classmethod
+    def strip_ansi(cls, text: str) -> str:
+        import re
+        ansi_escape = re.compile(r'\x1b\[[0-9;]*m|\033\[[0-9;]*m')
+        return ansi_escape.sub('', text)
 
-    @staticmethod
-    def format_error(message: str) -> str:
-        return f"🔴 \033[91m[ERROR]\033[0m {message}"
+    @classmethod
+    def should_color(cls) -> bool:
+        if cls.no_color:
+            return False
+        if "NO_COLOR" in os.environ:
+            return False
+        return True
 
-    @staticmethod
-    def format_hold(message: str) -> str:
-        return f"🔵 \033[94m[HOLD]\033[0m {message}"
+    @classmethod
+    def supports_unicode(cls) -> bool:
+        if cls.force_ascii:
+            return False
+        if cls._supports_unicode is not None:
+            return cls._supports_unicode
+        if "PYTEST_CURRENT_TEST" in os.environ:
+            cls._supports_unicode = True
+            return True
+        try:
+            if sys.stdout and sys.stdout.encoding:
+                encoding = sys.stdout.encoding.lower()
+                if "utf" in encoding or "65001" in encoding:
+                    cls._supports_unicode = True
+                    return True
+        except Exception:
+            pass
+        cls._supports_unicode = False
+        return False
 
-    @staticmethod
-    def render_table(headers: List[str], rows: List[List[str]], max_col_width: int = 35) -> str:
+    @classmethod
+    def format_ok(cls, message: str) -> str:
+        if cls.supports_unicode():
+            if cls.should_color():
+                return f"🟢 \033[92m[SUCCESS]\033[0m {message}"
+            return f"🟢 [SUCCESS] {message}"
+        else:
+            if cls.should_color():
+                return f"(+) \033[92m[SUCCESS]\033[0m {message}"
+            return f"(+) [SUCCESS] {message}"
+
+    @classmethod
+    def format_warn(cls, message: str) -> str:
+        if cls.supports_unicode():
+            if cls.should_color():
+                return f"🟡 \033[93m[WARN]\033[0m {message}"
+            return f"🟡 [WARN] {message}"
+        else:
+            if cls.should_color():
+                return f"(*) \033[93m[WARN]\033[0m {message}"
+            return f"(*) [WARN] {message}"
+
+    @classmethod
+    def format_error(cls, message: str) -> str:
+        if cls.supports_unicode():
+            if cls.should_color():
+                return f"🔴 \033[91m[ERROR]\033[0m {message}"
+            return f"🔴 [ERROR] {message}"
+        else:
+            if cls.should_color():
+                return f"(x) \033[91m[ERROR]\033[0m {message}"
+            return f"(x) [ERROR] {message}"
+
+    @classmethod
+    def format_hold(cls, message: str) -> str:
+        if cls.supports_unicode():
+            if cls.should_color():
+                return f"🔵 \033[94m[HOLD]\033[0m {message}"
+            return f"🔵 [HOLD] {message}"
+        else:
+            if cls.should_color():
+                return f"(=) \033[94m[HOLD]\033[0m {message}"
+            return f"(=) [HOLD] {message}"
+
+    @classmethod
+    def render_table(cls, headers: List[str], rows: List[List[str]], max_col_width: int = 35) -> str:
         """
         Formats data rows into a single ASCII box table, truncating long fields.
         """
+        if cls.force_linear:
+            lines = []
+            for row in rows:
+                item_lines = []
+                for h, cell in zip(headers, row):
+                    item_lines.append(f"{h}: {cell}")
+                lines.append("\n".join(item_lines))
+            return ("\n" + "-" * 40 + "\n").join(lines)
         sanitized_headers = []
         for h in headers:
             s_h = str(h)
@@ -75,22 +150,35 @@ class CLIFormatter:
                 else:
                     col_widths.append(len(cell))
 
-        top_border = "┌" + "┬".join("─" * (w + 2) for w in col_widths) + "┐\n"
+        if cls.supports_unicode():
+            t_top, t_mid, t_bot = "┌", "┬", "┐"
+            t_horiz, t_vert = "─", "│"
+            t_cross_mid = "┼"
+            t_left_mid, t_right_mid = "├", "┤"
+            t_bot_left, t_bot_mid, t_bot_right = "└", "┴", "┘"
+        else:
+            t_top, t_mid, t_bot = "+", "+", "+"
+            t_horiz, t_vert = "-", "|"
+            t_cross_mid = "+"
+            t_left_mid, t_right_mid = "+", "+"
+            t_bot_left, t_bot_mid, t_bot_right = "+", "+", "+"
+
+        top_border = t_top + t_mid.join(t_horiz * (w + 2) for w in col_widths) + t_bot + "\n"
         
-        header_row = "│" + "│".join(f" {h.ljust(w)} " for h, w in zip(sanitized_headers, col_widths)) + "│"
+        header_row = t_vert + t_vert.join(f" {h.ljust(w)} " for h, w in zip(sanitized_headers, col_widths)) + t_vert
         
-        header_sep = "\n├" + "┼".join("─" * (w + 2) for w in col_widths) + "┤"
+        header_sep = "\n" + t_left_mid + t_cross_mid.join(t_horiz * (w + 2) for w in col_widths) + t_right_mid
         
         row_strings = []
         for row in sanitized_rows:
             padded_row = row + [""] * (len(col_widths) - len(row))
-            row_str = "│" + "│".join(f" {cell.ljust(w)} " for cell, w in zip(padded_row, col_widths)) + "│"
+            row_str = t_vert + t_vert.join(f" {cell.ljust(w)} " for cell, w in zip(padded_row, col_widths)) + t_vert
             row_strings.append(row_str)
 
-        row_sep = "\n├" + "┼".join("─" * (w + 2) for w in col_widths) + "┤\n"
+        row_sep = "\n" + t_left_mid + t_cross_mid.join(t_horiz * (w + 2) for w in col_widths) + t_right_mid + "\n"
         rows_section = row_sep.join(row_strings)
         
-        bottom_sep = "\n└" + "┴".join("─" * (w + 2) for w in col_widths) + "┘"
+        bottom_sep = "\n" + t_bot_left + t_bot_mid.join(t_horiz * (w + 2) for w in col_widths) + t_bot_right
 
         table_str = top_border + header_row + header_sep
         if rows_section:
@@ -99,14 +187,22 @@ class CLIFormatter:
         return table_str
 
     @staticmethod
-    def get_welcome_banner() -> str:
+    def get_welcome_banner(translation_service=None) -> str:
         """
         CLI welcome banner.
         """
+        title = "BIBLIOMODEL CLI"
+        subtitle = "Library Loan Tracking & Business Rules"
+        if translation_service:
+            title = translation_service.translate("welcome_title")
+            subtitle = translation_service.translate("welcome_subtitle")
+            
+        title_padded = f"║{title.center(64)}║\n"
+        subtitle_padded = f"║{subtitle.center(64)}║\n"
         banner = (
             "╔════════════════════════════════════════════════════════════════╗\n"
-            "║                       BIBLIOMODEL CLI                          ║\n"
-            "║            Library Loan Tracking & Business Rules              ║\n"
+            f"{title_padded}"
+            f"{subtitle_padded}"
             "╚════════════════════════════════════════════════════════════════╝"
         )
         return banner
@@ -117,8 +213,8 @@ class CLIHelpSystem:
     Generates library rules help text and usage examples.
     """
     @staticmethod
-    def render_help(config_provider: IConfigProvider) -> str:
-        banner = CLIFormatter.get_welcome_banner()
+    def render_help(config_provider: IConfigProvider, translation_service=None) -> str:
+        banner = CLIFormatter.get_welcome_banner(translation_service)
         try:
             max_loans = config_provider.get_max_loans()
             loan_days = config_provider.get_loan_period_days()
@@ -130,15 +226,29 @@ class CLIHelpSystem:
             fine_rate = 2.00
             grace_days = 0
 
-        # Build Rules section
+        # Translate labels
+        title_rules = "ACTIVE BUSINESS RULES"
+        lbl_limit = "Simultaneous Loan Limit"
+        lbl_period = "Loan Period"
+        lbl_fine = "Daily Fine Rate"
+        lbl_grace = "Grace Period"
+        lbl_days = "days"
+        if translation_service:
+            title_rules = translation_service.translate("active_business_rules")
+            lbl_limit = translation_service.translate("rule_limit")
+            lbl_period = translation_service.translate("rule_period")
+            lbl_fine = translation_service.translate("rule_fine")
+            lbl_grace = translation_service.translate("rule_grace")
+            lbl_days = translation_service.translate("days")
+
         rules_str = (
             "┌────────────────────────────────────────────────────────────────┐\n"
-            "│                     ACTIVE BUSINESS RULES                      │\n"
+            f"│{title_rules.center(64)}│\n"
             "├────────────────────────────────────────────────────────────────┤\n"
-            f"│  • Simultaneous Loan Limit: {max_loans:<35} │\n"
-            f"│  • Loan Period: {str(loan_days) + ' days':<47} │\n"
-            f"│  • Daily Fine Rate: ${fine_rate:<42.2f} │\n"
-            f"│  • Grace Period: {str(grace_days) + ' days':<46} │\n"
+            f"│  • {lbl_limit}: {max_loans:<35} │\n"
+            f"│  • {lbl_period}: {str(loan_days) + ' ' + lbl_days:<47} │\n"
+            f"│  • {lbl_fine}: ${fine_rate:<42.2f} │\n"
+            f"│  • {lbl_grace}: {str(grace_days) + ' ' + lbl_days:<46} │\n"
             "└────────────────────────────────────────────────────────────────┘"
         )
 
@@ -192,7 +302,8 @@ class CLIController:
         waive_fine_use_case: WaiveFineUseCase = None,
         generate_report_use_case: GenerateReportUseCase = None,
         notification_service: INotificationService = None,
-        report_exporter: IReportExporter = None
+        report_exporter: IReportExporter = None,
+        translation_service: ITranslationService = None
     ) -> None:
         """
         Initializes use case controllers.
@@ -230,6 +341,12 @@ class CLIController:
         else:
             self.report_exporter = report_exporter
 
+        if translation_service is None:
+            from src.infra.translation_service import TranslationService
+            self.translation_service = TranslationService(config_provider)
+        else:
+            self.translation_service = translation_service
+
 
 
     def execute(self, args: List[str]) -> str:
@@ -238,6 +355,36 @@ class CLIController:
         """
         start_time = time.perf_counter()
         
+        # Intercept --no-color and --linear globally
+        cleaned_args = list(args)
+        no_color_val = False
+        if "--no-color" in cleaned_args:
+            no_color_val = True
+            cleaned_args.remove("--no-color")
+        CLIFormatter.no_color = no_color_val
+
+        is_linear = False
+        if "--linear" in cleaned_args:
+            is_linear = True
+            cleaned_args.remove("--linear")
+        CLIFormatter.force_linear = is_linear
+
+        # Extract --lang flag if present
+        lang_val = None
+        if "--lang" in cleaned_args:
+            try:
+                idx = cleaned_args.index("--lang")
+                lang_val = cleaned_args[idx + 1]
+                del cleaned_args[idx:idx+2]
+            except Exception:
+                pass
+
+        if lang_val:
+            try:
+                self.translation_service.set_locale(lang_val)
+            except ValueError:
+                pass
+
         # Determine operator context
         try:
             operator = os.getlogin()
@@ -250,8 +397,8 @@ class CLIController:
         logger = logging.getLogger("bibliomodel")
 
         # Intercept help, -h, --help
-        if not args or "-h" in args or "--help" in args or "help" in args:
-            help_output = CLIHelpSystem.render_help(self.config_provider)
+        if not cleaned_args or "-h" in cleaned_args or "--help" in cleaned_args or "help" in cleaned_args:
+            help_output = CLIHelpSystem.render_help(self.config_provider, self.translation_service)
             elapsed_ms = (time.perf_counter() - start_time) * 1000
             logger.info(
                 f"Operator: {operator} | Command: {args} | "
@@ -347,7 +494,7 @@ class CLIController:
 
         try:
             try:
-                parsed_args = parser.parse_args(args)
+                parsed_args = parser.parse_args(cleaned_args)
             except (argparse.ArgumentError, ValueError) as err:
                 status = "parse_error"
                 result_message = CLIFormatter.format_error(f"Error parsing arguments: {str(err)}")
@@ -383,9 +530,13 @@ class CLIController:
                     checkout_date=loan_date
                 )
                 status = "success"
-                result_message = CLIFormatter.format_ok(
-                    f"Success: Book '{parsed_args.book}' loaned to Reader '{parsed_args.reader}' until {loan.due_date.isoformat()}."
+                success_msg = self.translation_service.translate(
+                    "loan_success",
+                    book=parsed_args.book,
+                    reader=parsed_args.reader,
+                    due_date=loan.due_date.isoformat()
                 )
+                result_message = CLIFormatter.format_ok(success_msg)
 
             elif parsed_args.command == "return":
                 return_date = date.today()
@@ -394,9 +545,11 @@ class CLIController:
                         return_date = date.fromisoformat(parsed_args.date)
                     except ValueError:
                         status = "parse_error"
-                        result_message = CLIFormatter.format_error(
-                            f"Error parsing arguments: Invalid date format: '{parsed_args.date}'. Expected YYYY-MM-DD."
+                        err_msg = self.translation_service.translate(
+                            "error_parsing_arguments",
+                            message=f"Invalid date format: '{parsed_args.date}'. Expected YYYY-MM-DD."
                         )
+                        result_message = CLIFormatter.format_error(err_msg)
                         return result_message
                 
                 try:
@@ -435,9 +588,10 @@ class CLIController:
                 )
                 
                 status = "success"
-                msg = f"Success: Book '{parsed_args.book}' returned."
+                msg = self.translation_service.translate("return_success", book=parsed_args.book)
                 if loan.fine_amount > 0:
-                    msg += f" Late return fine: ${loan.fine_amount:.2f}."
+                    fine_msg = self.translation_service.translate("return_fine_message", fine=loan.fine_amount)
+                    msg += fine_msg
                     result_message = CLIFormatter.format_warn(msg)
                 else:
                     result_message = CLIFormatter.format_ok(msg)
@@ -449,9 +603,12 @@ class CLIController:
                     book_id=parsed_args.book
                 )
                 status = "success"
-                result_message = CLIFormatter.format_hold(
-                    f"Success: Book '{parsed_args.book}' reserved for Reader '{parsed_args.reader}'."
+                success_msg = self.translation_service.translate(
+                    "reserve_success",
+                    book=parsed_args.book,
+                    reader=parsed_args.reader
                 )
+                result_message = CLIFormatter.format_hold(success_msg)
 
             elif parsed_args.command == "report":
                 report_data = self.generate_report_use_case.execute()
@@ -485,8 +642,9 @@ class CLIController:
                     with open(report_file, "w", encoding="utf-8") as f:
                         f.write(report_content)
                     status = "success"
+                    success_msg = self.translation_service.translate("report_success", report_file=report_file)
                     result_message = CLIFormatter.format_ok(
-                        f"Success: {report_file} generated.\n{report_table}"
+                        f"{success_msg}\n{report_table}"
                     )
                 except Exception as write_err:
                     status = "system_error"
@@ -495,7 +653,8 @@ class CLIController:
             elif parsed_args.command == "waive":
                 if not parsed_args.operator or not parsed_args.reason:
                     status = "validation_error"
-                    result_message = CLIFormatter.format_error("Operator name and reason parameters are required to waive fines.")
+                    err_msg = self.translation_service.translate("waive_params_required")
+                    result_message = CLIFormatter.format_error(err_msg)
                     return result_message
 
                 self.waive_fine_use_case.execute(parsed_args.reader)
@@ -505,11 +664,17 @@ class CLIController:
                     f"AUDIT: Operator '{parsed_args.operator}' waived fine for Reader '{parsed_args.reader}' "
                     f"due to: '{parsed_args.reason}'"
                 )
-                result_message = CLIFormatter.format_ok(f"Success: Fine waived for Reader '{parsed_args.reader}'.")
+                success_msg = self.translation_service.translate("waive_success", reader=parsed_args.reader)
+                result_message = CLIFormatter.format_ok(success_msg)
 
             elif parsed_args.command == "list-books":
                 books = self.repository.list_books()
-                headers = ["Book ID", "Title", "Status", "Hold Queue"]
+                headers = [
+                    self.translation_service.translate("col_book_id"),
+                    self.translation_service.translate("col_title"),
+                    self.translation_service.translate("col_status"),
+                    self.translation_service.translate("col_hold_queue")
+                ]
                 rows = []
                 for b in books:
                     rows.append([
@@ -524,7 +689,13 @@ class CLIController:
 
             elif parsed_args.command == "list-readers":
                 readers = self.repository.list_readers()
-                headers = ["Reader ID", "Name", "Status", "Fine Balance", "Active Loans"]
+                headers = [
+                    self.translation_service.translate("col_reader_id"),
+                    self.translation_service.translate("col_name"),
+                    self.translation_service.translate("col_status"),
+                    self.translation_service.translate("col_fine_balance"),
+                    self.translation_service.translate("col_active_loans")
+                ]
                 rows = []
                 for r in readers:
                     active_loan_ids = [loan.loan_id for loan in r.active_loans]
@@ -541,7 +712,15 @@ class CLIController:
 
             elif parsed_args.command == "list-loans":
                 loans = self.repository.list_loans()
-                headers = ["Loan ID", "Book ID", "Reader ID", "Checkout Date", "Due Date", "Return Date", "Fine"]
+                headers = [
+                    self.translation_service.translate("col_loan_id"),
+                    self.translation_service.translate("col_book_id"),
+                    self.translation_service.translate("col_reader_id"),
+                    self.translation_service.translate("col_checkout_date"),
+                    self.translation_service.translate("col_due_date"),
+                    self.translation_service.translate("col_return_date"),
+                    self.translation_service.translate("col_fine")
+                ]
                 rows = []
                 for l in loans:
                     rows.append([
@@ -566,7 +745,13 @@ class CLIController:
             elif parsed_args.command == "search-books":
                 query = parsed_args.query
                 books = self.repository.search_books(query)
-                headers = ["Book ID", "Title", "Author", "Status", "Hold Queue"]
+                headers = [
+                    self.translation_service.translate("col_book_id"),
+                    self.translation_service.translate("col_title"),
+                    self.translation_service.translate("col_author"),
+                    self.translation_service.translate("col_status"),
+                    self.translation_service.translate("col_hold_queue")
+                ]
                 rows = []
                 for b in books:
                     rows.append([
@@ -583,7 +768,13 @@ class CLIController:
             elif parsed_args.command == "search-readers":
                 query = parsed_args.query
                 readers = self.repository.search_readers(query)
-                headers = ["Reader ID", "Name", "Status", "Fine Balance", "Active Loans"]
+                headers = [
+                    self.translation_service.translate("col_reader_id"),
+                    self.translation_service.translate("col_name"),
+                    self.translation_service.translate("col_status"),
+                    self.translation_service.translate("col_fine_balance"),
+                    self.translation_service.translate("col_active_loans")
+                ]
                 rows = []
                 for r in readers:
                     active_loan_ids = [loan.loan_id for loan in r.active_loans]
@@ -618,7 +809,8 @@ class CLIController:
                         output_path=parsed_args.output
                     )
                     status = "success"
-                    result_message = CLIFormatter.format_ok(f"Success: Report exported to {exported_path}")
+                    success_msg = self.translation_service.translate("export_success", output_path=exported_path)
+                    result_message = CLIFormatter.format_ok(success_msg)
                 except PermissionError as perm_err:
                     status = "validation_error"
                     result_message = CLIFormatter.format_error(str(perm_err))
@@ -638,7 +830,8 @@ class CLIController:
                 
                 if not reader_overdues:
                     status = "success"
-                    result_message = CLIFormatter.format_ok("No overdue loans found.")
+                    success_msg = self.translation_service.translate("no_overdue_loans_found")
+                    result_message = CLIFormatter.format_ok(success_msg)
                     return result_message
 
                 from src.domain.services import FineCalculator
@@ -679,7 +872,8 @@ class CLIController:
                         success_count += 1
 
                 status = "success"
-                result_message = CLIFormatter.format_ok(f"Success: Simulated notifications sent to {success_count} readers.")
+                success_msg = self.translation_service.translate("notify_overdue_success", success_count=success_count)
+                result_message = CLIFormatter.format_ok(success_msg)
 
             elif parsed_args.command == "check-overdue":
                 readers = self.repository.list_readers()
@@ -695,9 +889,8 @@ class CLIController:
                         self.repository.save_reader(reader)
                         
                 status = "success"
-                result_message = CLIFormatter.format_ok(
-                    f"Success: Overdue scan complete. Suspended {suspended_count} readers."
-                )
+                success_msg = self.translation_service.translate("check_overdue_success", suspended_count=suspended_count)
+                result_message = CLIFormatter.format_ok(success_msg)
 
             elif parsed_args.command == "reader-history":
                 r_id = parsed_args.reader_id
@@ -753,7 +946,14 @@ class CLIController:
                 if parsed_args.last_n is not None and parsed_args.last_n > 0:
                     all_records = all_records[:parsed_args.last_n]
 
-                headers = ["Book Title", "Checkout", "Return", "Delay", "Fine", "Status"]
+                headers = [
+                    self.translation_service.translate("col_title"),
+                    self.translation_service.translate("col_checkout_date"),
+                    self.translation_service.translate("col_return_date"),
+                    self.translation_service.translate("col_delay"),
+                    self.translation_service.translate("col_fine"),
+                    self.translation_service.translate("col_status")
+                ]
                 rows = []
                 for r in all_records:
                     rows.append([
@@ -851,7 +1051,14 @@ class CLIController:
                 if parsed_args.top is not None and parsed_args.top > 0:
                     book_records = book_records[:parsed_args.top]
 
-                headers = ["Rank", "Book ID", "Title", "Checkout Count", "Waitlist Size", "Status"]
+                headers = [
+                    self.translation_service.translate("col_rank"),
+                    self.translation_service.translate("col_book_id"),
+                    self.translation_service.translate("col_title"),
+                    self.translation_service.translate("col_checkout_count"),
+                    self.translation_service.translate("col_waitlist_size"),
+                    self.translation_service.translate("col_status")
+                ]
                 rows = []
                 for i, r in enumerate(book_records):
                     rows.append([

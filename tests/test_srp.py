@@ -93,6 +93,7 @@ def test_smtp_notification_service() -> None:
 def test_interactive_shell_runs_commands(monkeypatch) -> None:
     mock_controller = MagicMock()
     mock_controller.execute.return_value = "Mocked execution success"
+    mock_controller.translation_service.translate.side_effect = lambda key, **kwargs: key
     
     shell = InteractiveShell(mock_controller)
     

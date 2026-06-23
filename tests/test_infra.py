@@ -83,7 +83,7 @@ def test_cli_controller_loan_success() -> None:
     
     # Run loan command with explicit date
     res = controller.execute(["loan", "--reader", "R1", "--book", "B1", "--date", "2026-06-12"])
-    assert "[OK]" in res
+    assert "[SUCCESS]" in res
     assert "loaned" in res
     assert "R1" in res
     assert "B1" in res
@@ -179,7 +179,7 @@ def test_cli_controller_report_success() -> None:
     config = FakeConfigProvider()
     controller = CLIController(repo, config)
     res = controller.execute(["report"])
-    assert "[OK]" in res
+    assert "[SUCCESS]" in res
 
 def test_cli_controller_telemetry_logging(caplog) -> None:
     from src.infra.cli import CLIController
@@ -223,7 +223,7 @@ def test_cli_controller_waive_success(caplog) -> None:
         "--reason", "Patron disputed fine"
     ])
     
-    assert "[OK]" in res
+    assert "[SUCCESS]" in res
     assert "R1" in res
     assert reader.fine_balance == 0.0
     assert reader.status == "Active"
@@ -299,7 +299,7 @@ def test_cli_controller_report_export() -> None:
         
     try:
         res = controller.execute(["report"])
-        assert "[OK]" in res
+        assert "[SUCCESS]" in res
         assert os.path.exists(report_file)
         
         with open(report_file, "r", encoding="utf-8") as f:
