@@ -1,0 +1,5 @@
+{
+  "welcome": "Welcome to BiblioModel!",
+  "fine_amount": "Fine amount: ${amount}",
+  "checkout_success": "Success: Book '{book_id}' loaned to Reader '{reader_id}' until {due_date}."
+}

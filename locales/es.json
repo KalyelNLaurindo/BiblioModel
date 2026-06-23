@@ -1,0 +1,5 @@
+{
+  "welcome": "¡Bienvenido a BiblioModel!",
+  "fine_amount": "Monto de la multa: ${amount}",
+  "checkout_success": "Éxito: Libro '{book_id}' prestado al Lector '{reader_id}' hasta {due_date}."
+}
