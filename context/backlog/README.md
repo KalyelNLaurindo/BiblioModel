@@ -180,17 +180,14 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 48.0 (Medium Priority / Could Have) | Reach: 60 / Impact: 2 / Confidence: 0.8 / Effort: 2  
   * *Status:* Done  
-
 * **[[TSK-29](TSK-29.md)]: Structured Transaction Journal Logging (Write-Ahead Log)**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 81.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 0.9 / Effort: 2  
   * *Status:* Done  
-
 * **[[TSK-30](TSK-30.md)]: Refactor God Class CLIController to Adhere to SRP**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 144.0 (High Priority / Must Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 1  
   * *Status:* Done  
-
 * **[[TSK-31](TSK-31.md)]: Testing Coverage Monitoring and CLI Exclusion Policy**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 144.0 (High Priority / Must Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 1  
@@ -202,7 +199,6 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 72.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 2  
   * *Status:* Done  
-
 * **[[TSK-33](TSK-33.md)]: UI Presenter CLI Localization Adapter**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 72.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 2  
@@ -214,22 +210,74 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 213.75 (High Priority / Should Have) | Reach: 95 / Impact: 2.5 / Confidence: 0.9 / Effort: 1  
   * *Status:* Done  
-
 * **[[TSK-35](TSK-35.md)]: Library CLI A11y Suite (Monochrome high-contrast themes and clean reader streams)**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 285.0 (High Priority / Should Have) | Reach: 95 / Impact: 3.0 / Confidence: 1.0 / Effort: 1  
   * *Status:* Done  
 
+### **⚡ Phase 10: Cobertura de Infraestrutura & Testes de Integração Avançados**
 
+* **[[TSK-36](TSK-36.md)]: Robustness and Boundary Tests for JSONPersistenceAdapter**  
+  * *Epic Link:* FT-10 (Architectural Resilience)  
+  * *RICE Score:* 120.0 (High Priority / Should Have) | Reach: 80 / Impact: 3 / Confidence: 1.0 / Effort: 2  
+  * *Status:* To Do  
+* **[[TSK-37](TSK-37.md)]: Integration Tests for DIContainer**  
+  * *Epic Link:* FT-10 (Architectural Resilience)  
+  * *RICE Score:* 80.0 (Medium Priority / Should Have) | Reach: 80 / Impact: 2 / Confidence: 1.0 / Effort: 2  
+  * *Status:* To Do  
+* **[[TSK-38](TSK-38.md)]: Robustness and Coverage for TranslationService**  
+  * *Epic Link:* FT-10 (Architectural Resilience)  
+  * *RICE Score:* 80.0 (Medium Priority / Should Have) | Reach: 80 / Impact: 2 / Confidence: 1.0 / Effort: 2  
+  * *Status:* To Do  
+
+### **💾 Phase 11: Evolução de Schema & Controle de Versão de Dados**
+
+* **[[TSK-39](TSK-39.md)]: Metadata Headers and Versioning for JSON Database**  
+  * *Epic Link:* FT-04 (Repository Ports & Safe Adapter)  
+  * *RICE Score:* 135.0 (High Priority / Must Have) | Reach: 90 / Impact: 3 / Confidence: 1.0 / Effort: 2  
+  * *Status:* To Do  
+* **[[TSK-40](TSK-40.md)]: Linear Schema Migrations Mechanism in Pure Python**  
+  * *Epic Link:* FT-04 (Repository Ports & Safe Adapter)  
+  * *RICE Score:* 90.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 1.0 / Effort: 2  
+  * *Status:* To Do  
+
+### **⚙️ Phase 12: Gestão de Ciclo de Vida de Logs & Rotação**
+
+* **[[TSK-41](TSK-41.md)]: Size-based Log Rotation in setup_logger**  
+  * *Epic Link:* FT-01 (Bootstrap & Config Setup)  
+  * *RICE Score:* 80.0 (Medium Priority / Should Have) | Reach: 80 / Impact: 2 / Confidence: 1.0 / Effort: 2  
+  * *Status:* To Do  
+* **[[TSK-42](TSK-42.md)]: Automatic Compression and Cleanup of Historical Logs**  
+  * *Epic Link:* FT-01 (Bootstrap & Config Setup)  
+  * *RICE Score:* 60.0 (Medium Priority / Could Have) | Reach: 60 / Impact: 2 / Confidence: 1.0 / Effort: 2  
+  * *Status:* To Do  
+
+### **🛡️ Phase 13: Manutenibilidade, Qualidade de Código & Telemetria**
+
+* **[[TSK-43](TSK-43.md)]: Comprehensive Code Comments Review & Simplification**  
+  * *Epic Link:* FT-10 (Architectural Resilience)  
+  * *RICE Score:* 120.0 (High Priority / Should Have) | Reach: 80 / Impact: 3 / Confidence: 1.0 / Effort: 2  
+  * *Status:* To Do  
+* **[[TSK-44](TSK-44.md)]: Decoupled Telemetry Logging and Trace Spreading**  
+  * *Epic Link:* FT-13 (Telemetry & Logging)  
+  * *RICE Score:* 120.0 (High Priority / Should Have) | Reach: 80 / Impact: 3 / Confidence: 1.0 / Effort: 2  
+  * *Status:* To Do  
 
 ---
-
 
 ## **3. 📋 Basic Markdown Kanban Board**
 
 ### **🔴 To Do (Ready for Development)**
 
-* None
+* [ ] **[[TSK-36](TSK-36.md)]:** Robustness and Boundary Tests for JSONPersistenceAdapter
+* [ ] **[[TSK-37](TSK-37.md)]:** Integration Tests for DIContainer
+* [ ] **[[TSK-38](TSK-38.md)]:** Robustness and Coverage for TranslationService
+* [ ] **[[TSK-39](TSK-39.md)]:** Metadata Headers and Versioning for JSON Database
+* [ ] **[[TSK-40](TSK-40.md)]:** Linear Schema Migrations Mechanism in Pure Python
+* [ ] **[[TSK-41](TSK-41.md)]:** Size-based Log Rotation in setup_logger
+* [ ] **[[TSK-42](TSK-42.md)]:** Automatic Compression and Cleanup of Historical Logs
+* [ ] **[[TSK-43](TSK-43.md)]:** Comprehensive Code Comments Review & Simplification
+* [ ] **[[TSK-44](TSK-44.md)]:** Decoupled Telemetry Logging and Trace Spreading
 
 ### **🟡 In Progress (Actively Being Built)**
 
