@@ -9,6 +9,8 @@ from src.app.ports import ILibraryRepository, IConfigProvider, ILoanHistoryRepos
 from src.app.use_cases import CheckoutUseCase, ReturnUseCase, ReserveUseCase, WaiveFineUseCase, GenerateReportUseCase
 from src.domain.entities import DomainError
 from src.app.validators import InputValidator
+from src.domain.events import EventDispatcher
+from src.infra.listeners import bootstrap_listeners
 
 class TestableArgumentParser(argparse.ArgumentParser):
     """
@@ -191,8 +193,12 @@ class CLIController:
         else:
             self.history_repository = history_repository
 
-        self.checkout_use_case = CheckoutUseCase(repository, config_provider)
-        self.return_use_case = ReturnUseCase(repository, config_provider, self.history_repository)
+        # Initialize event dispatcher and bootstrap infrastructure listeners
+        self.event_dispatcher = EventDispatcher()
+        bootstrap_listeners(self.event_dispatcher, self.history_repository)
+
+        self.checkout_use_case = CheckoutUseCase(repository, config_provider, dispatcher=self.event_dispatcher)
+        self.return_use_case = ReturnUseCase(repository, config_provider, self.history_repository, dispatcher=self.event_dispatcher)
         self.reserve_use_case = ReserveUseCase(repository)
         self.waive_fine_use_case = WaiveFineUseCase(repository)
         self.generate_report_use_case = GenerateReportUseCase(repository)
