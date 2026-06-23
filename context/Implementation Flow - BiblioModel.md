@@ -20,7 +20,6 @@
 To prevent architectural regression, production follows a strict bottom-up approach. Core domain layers and backing configurations must be locked and verified before delivery adapters and user interfaces are built.
 
 ### **Phase 1: Backing Infrastructure & Configuration Setup**
-
 - **Core Focus:** Configuration file parsing (`config.ini`) and logger setup (`bibliomodel.log`).
 - **Key Tasks:**
   - Implement configuration loading using the standard library `configparser` to parse borrowing limits (default: 3 books), default loan periods (default: 7 days), and daily fine rates (default: $2.00).
@@ -28,7 +27,6 @@ To prevent architectural regression, production follows a strict bottom-up appro
 - **Output Deliverable:** Functional bootstrapping layer capable of loading dynamic rules from `config.ini` and validating logging pipelines.
 
 ### **Phase 2: Bounded Domain Context & Core Models**
-
 - **Core Focus:** Pure Object-Oriented domain entities (`BookEntity`, `ReaderEntity`, `LoanEntity`) protecting domain invariants.
 - **Key Tasks:**
   - Implement status states (`Available`, `Loaned`, `Reserved` for Books; `Active`, `Suspended` for Readers).
@@ -38,7 +36,6 @@ To prevent architectural regression, production follows a strict bottom-up appro
 - **Output Deliverable:** Pure Python domain layer with 0 dependencies, encapsulating all core business objects and status transition validations.
 
 ### **Phase 3: Test-Driven Core Logic (Use Cases)**
-
 - **Core Focus:** Application service use cases orchestrating user activities.
 - **Key Tasks:**
   - Implement `CheckoutUseCase` checking reader status eligibility and book availability invariants.
@@ -48,7 +45,6 @@ To prevent architectural regression, production follows a strict bottom-up appro
 - **Output Deliverable:** Complete business use-case engine with 100% logic coverage verified via failing specs before writing application logic.
 
 ### **Phase 4: Interface Adapters & Persistence Adapters**
-
 - **Core Focus:** CLI interface parsing and atomic file persistence routines.
 - **Key Tasks:**
   - Build the concrete `JSONPersistenceAdapter` implementing `ILibraryRepository` with atomic writing loops.
@@ -56,12 +52,84 @@ To prevent architectural regression, production follows a strict bottom-up appro
 - **Output Deliverable:** Fully functional end-to-end local-first CLI tool serializing domain state changes into `db_backup.json` securely.
 
 ### **Phase 5: Diagnostics, Observability & Hardening**
-
 - **Core Focus:** Performance telemetry and error-handling verification.
 - **Key Tasks:**
   - Audit logs recording transactions with operator tags.
   - Validate database load recovery under simulated json corruption, checking the recovery rollover to `db_backup.json.bak`.
 - **Output Deliverable:** Hardened production CLI executable ready for integration verification.
+
+### **Phase 6: Packaging & Master Entry Point**
+- **Core Focus:** Establishing pyproject.toml configuration and unified main entry point.
+- **Key Tasks:**
+  - Set up python packaging with setuptools entry points.
+  - Establish static analysis checks (mypy, flake8).
+- **Output Deliverable:** Executable and installable library package.
+
+### **Phase 7: Reporting, Search & Notification Extensibility**
+- **Core Focus:** CSV/HTML reports export and notification simulations.
+- **Key Tasks:**
+  - Build exporters for CSV and HTML reports.
+  - Create advanced fuzzy queries for readers and books.
+  - Simulate delay notifications via email templates.
+- **Output Deliverable:** Complete reporting and lookup subsystems.
+
+### **Phase 8: Billing Automation & Operational Reports**
+- **Core Focus:** Auto-suspension and patronage analytics.
+- **Key Tasks:**
+  - Develop overdue auto-suspension engine.
+  - Generate book popularity stats and waitlist advice.
+- **Output Deliverable:** Advanced library operations logic layer.
+
+### **Phase 9: Advanced Architectural Engineering & Resilience**
+- **Core Focus:** Unit of Work, Event Dispatcher, DI Container, and Transaction Journals.
+- **Key Tasks:**
+  - Implement UoW transaction boundaries.
+  - Build pub/sub domain event dispatcher.
+  - Refactor controllers to respect SRP.
+- **Output Deliverable:** Highly scalable and decoupled clean architecture foundations.
+
+### **Phase 9.1: Internationalization (i18n) & Localization**
+- **Core Focus:** Multi-language catalog support.
+- **Key Tasks:**
+  - Implement registry and translation loading.
+  - Adapter CLI outputs to translate messages dynamically.
+- **Output Deliverable:** Multi-locale command presenter.
+
+### **Phase 9.2: CLI Accessibility & Interactive Prompt**
+- **Core Focus:** UX error badging and monochrome configurations.
+- **Key Tasks:**
+  - Style prompt shell and linear screen reader views.
+  - Bypassing visual escaping on `NO_COLOR` settings.
+- **Output Deliverable:** Universally accessible shell interfaces.
+
+### **Phase 10: Advanced Infrastructure & Integration Testing**
+- **Core Focus:** Robustness verification of infrastructure adapters.
+- **Key Tasks:**
+  - Create integration checks simulating file blockages, write failures, and missing fields in json adapter.
+  - Test DI cyclic resolutions and registration overwrites.
+  - Test TranslationService with missing translation keys and missing locale files.
+- **Output Deliverable:** Fully isolated and resilient adapters with tested fallback behaviors.
+
+### **Phase 11: Schema Evolution & Data Versioning**
+- **Core Focus:** Support metadata headers and schema migrations.
+- **Key Tasks:**
+  - Include schema version, software engine version, and timestamp headers in json.
+  - Build a linear registry in Python to transform schemas from v0/v1 to latest.
+- **Output Deliverable:** Upgradable persistence schema avoiding data loss.
+
+### **Phase 12: Log Lifecycle & Rotation Management**
+- **Core Focus:** Size-based log file rotating and historical logs cleaning.
+- **Key Tasks:**
+  - Configure `RotatingFileHandler` with custom `max_bytes` and `backup_count` in config.
+  - Compress rotated logs to gzip and implement a maintenance script/cli command `maintenance --clean-logs`.
+- **Output Deliverable:** Structured logging workspace preventing infinite log growth.
+
+### **Phase 13: Maintainability, Code Quality & Telemetry**
+- **Core Focus:** Code readability improvement and telemetry trace spreading.
+- **Key Tasks:**
+  - Refactor and review all source code docstrings and comments to focus on business logic rules ("why") in clear English.
+  - Spread verbose trace logging throughout all adapters, use cases, events, and bootstrap routines.
+- **Output Deliverable:** Clear self-documenting code with comprehensive diagnostic logs.
 
 ---
 
@@ -130,6 +198,11 @@ This operational control ledger maps the engineering deliverables directly to th
 | **FT-03**          | src/app/use_cases.py   | tests/test_use_cases.py       | docs/prompts/ft03_usecases.md | Pending |
 | **FT-04**          | src/infra/adapters.py  | tests/test_persistence.py     | docs/prompts/ft04_adapters.md | Pending |
 | **FT-05**          | src/infra/cli.py       | tests/test_use_cases.py       | docs/prompts/ft05_cli.md      | Pending |
+| **FT-11**          | src/infra/adapters.py  | tests/test_persistence.py     | docs/prompts/ft11_testing.md  | Pending |
+| **FT-12**          | src/infra/adapters.py  | tests/test_persistence.py     | docs/prompts/ft12_schema.md   | Pending |
+| **FT-13**          | src/infra/adapters.py  | tests/test_persistence.py     | docs/prompts/ft13_logs.md     | Pending |
+| **FT-14**          | src/ (all python source)| tests/test_srp.py             | docs/prompts/ft14_comments.md | Pending |
+| **FT-15**          | src/ (all python source)| tests/test_infra.py           | docs/prompts/ft15_telemetry.md| Pending |
 
 ---
 

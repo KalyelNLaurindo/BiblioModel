@@ -247,13 +247,16 @@ Ensure your modifications pass the repository quality gates before submitting a 
 
 ---
 
-## **🔮 7. Future Features Planning**
+## **🔮 7. Future Features & Maintenance Planning**
 
-To extend BiblioModel's capabilities, the following features are planned for future implementation:
+To extend BiblioModel's capabilities, the following features are in active planning/backlog:
 
-1. **SQL Database Adapter**: Transition from local JSON serialization to an SQLite/PostgreSQL concrete repository implementing the outbound `ILibraryRepository` port, enabling concurrent client-server write access.
-2. **Web API Layer**: Package the use cases under a FastAPI/Flask HTTP gateway, exposing RESTful endpoints for remote catalog integration.
-3. **Bulk CSV Importer**: Develop a bootstrap command tool capable of bulk importing thousands of reader and book entities from Excel spreadsheets.
+1. **Infrastructure Resilience Suite (Active Backlog - Phase 10)**: Expanding test coverage to 100% across infrastructure adapters (`src/infra/*`), ensuring robustness against storage errors, cycles, and translation fallbacks.
+2. **Schema Migrations Engine (Active Backlog - Phase 11)**: Implementation of metadata database headers and linear migration scripts in pure Python for zero-data-loss upgrades.
+3. **Log Rotation & Maintenance CLI (Active Backlog - Phase 12)**: Introduction of `RotatingFileHandler` options and automated log compression/cleanup commands.
+4. **SQL Database Adapter (Planned)**: Transition from local JSON serialization to an SQLite/PostgreSQL concrete repository implementing the outbound `ILibraryRepository` port, enabling concurrent client-server write access.
+5. **Web API Layer (Planned)**: Package the use cases under a FastAPI/Flask HTTP gateway, exposing RESTful endpoints for remote catalog integration.
+6. **Bulk CSV Importer (Planned)**: Develop a bootstrap command tool capable of bulk importing thousands of reader and book entities from Excel spreadsheets.
 
 ---
 
