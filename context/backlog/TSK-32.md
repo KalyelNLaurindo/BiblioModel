@@ -20,7 +20,7 @@ The core service will:
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **[Testing/Quality - TDD]:** Test suite asserts that `ITranslationService` loads JSON profiles correctly and formats interpolation variables in all 5 target languages.
-* [ ] **[Functional - Locales]:** Directory `locales/` contains valid resource files: `pt.json`, `en.json`, `fr.json`, `es.json`, `de.json`.
-* [ ] **[Functional - Fallback]:** Resolves active language using hierarchy: 1. argparse `--lang` flag, 2. `config.ini` `lang` entry, 3. system environment locale, 4. default `pt`.
-* [ ] **[Verification]:** `pytest` tests pass 100% green.
+* [x] **[Testing/Quality - TDD]:** Test suite asserts that `ITranslationService` loads JSON profiles correctly and formats interpolation variables in all 5 target languages.
+* [x] **[Functional - Locales]:** Directory `locales/` contains valid resource files: `pt.json`, `en.json`, `fr.json`, `es.json`, `de.json`.
+* [x] **[Functional - Fallback]:** Resolves active language using hierarchy: 1. argparse `--lang` flag, 2. `config.ini` `lang` entry, 3. system environment locale, 4. default `pt`.
+* [x] **[Verification]:** `pytest` tests pass 100% green.
