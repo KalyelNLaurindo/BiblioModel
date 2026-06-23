@@ -4,6 +4,7 @@
 * **Estimated Effort:** 4 Hours  
 * **Story / Epic Reference:** FT-04 / RESILIENCE  
 * **Development Methodology:** TDD (Red-Green-Refactor)
+* **Status:** Done 🟢
 
 ## 📖 Description & Objectives
 
@@ -16,7 +17,7 @@ To achieve maximum data resilience and reduce the risk of state loss during hard
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **[Testing/Quality - TDD]:** Write integration tests verifying that transaction payloads are correctly appended to the journal before snapshot flushes.
-* [ ] **[Functional - Logging]:** Implement the append-only write routine inside `JSONPersistenceAdapter` using native file flushes (`fsync`) to ensure the transaction log is safely written to disk.
-* [ ] **[Functional - Recovery]:** Extend the startup health check in `adapters.py` to replay transactions from `transaction_journal.log` when restoring from `db_backup.json.bak` after a crash.
-* [ ] **[Verification]:** All new and existing unit/integration tests pass 100% green.
+* [x] **[Testing/Quality - TDD]:** Write integration tests verifying that transaction payloads are correctly appended to the journal before snapshot flushes.
+* [x] **[Functional - Logging]:** Implement the append-only write routine inside `JSONPersistenceAdapter` using native file flushes (`fsync`) to ensure the transaction log is safely written to disk.
+* [x] **[Functional - Recovery]:** Extend the startup health check in `adapters.py` to replay transactions from `transaction_journal.log` when restoring from `db_backup.json.bak` after a crash.
+* [x] **[Verification]:** All new and existing unit/integration tests pass 100% green.
