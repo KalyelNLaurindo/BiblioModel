@@ -180,7 +180,18 @@ class CLIController:
     Parses command arguments and routes execution to target use cases.
     """
 
-    def __init__(self, repository: ILibraryRepository, config_provider: IConfigProvider, history_repository: ILoanHistoryRepository = None) -> None:
+    def __init__(
+        self,
+        repository: ILibraryRepository,
+        config_provider: IConfigProvider,
+        history_repository: ILoanHistoryRepository = None,
+        event_dispatcher: EventDispatcher = None,
+        checkout_use_case: CheckoutUseCase = None,
+        return_use_case: ReturnUseCase = None,
+        reserve_use_case: ReserveUseCase = None,
+        waive_fine_use_case: WaiveFineUseCase = None,
+        generate_report_use_case: GenerateReportUseCase = None
+    ) -> None:
         """
         Initializes use case controllers.
         """
@@ -193,15 +204,17 @@ class CLIController:
         else:
             self.history_repository = history_repository
 
-        # Initialize event dispatcher and bootstrap infrastructure listeners
-        self.event_dispatcher = EventDispatcher()
-        bootstrap_listeners(self.event_dispatcher, self.history_repository)
+        if event_dispatcher is None:
+            self.event_dispatcher = EventDispatcher()
+            bootstrap_listeners(self.event_dispatcher, self.history_repository)
+        else:
+            self.event_dispatcher = event_dispatcher
 
-        self.checkout_use_case = CheckoutUseCase(repository, config_provider, dispatcher=self.event_dispatcher)
-        self.return_use_case = ReturnUseCase(repository, config_provider, self.history_repository, dispatcher=self.event_dispatcher)
-        self.reserve_use_case = ReserveUseCase(repository)
-        self.waive_fine_use_case = WaiveFineUseCase(repository)
-        self.generate_report_use_case = GenerateReportUseCase(repository)
+        self.checkout_use_case = checkout_use_case or CheckoutUseCase(repository, config_provider, dispatcher=self.event_dispatcher)
+        self.return_use_case = return_use_case or ReturnUseCase(repository, config_provider, self.history_repository, dispatcher=self.event_dispatcher)
+        self.reserve_use_case = reserve_use_case or ReserveUseCase(repository)
+        self.waive_fine_use_case = waive_fine_use_case or WaiveFineUseCase(repository)
+        self.generate_report_use_case = generate_report_use_case or GenerateReportUseCase(repository)
 
 
     def execute(self, args: List[str]) -> str:

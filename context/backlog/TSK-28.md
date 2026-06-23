@@ -3,7 +3,7 @@
 * **Owner / Assignee:** Developer / AI Agent  
 * **Estimated Effort:** 2 Story Points / 8 Hours  
 * **Story / Epic Reference:** FT-10 (Architectural Resilience)
-* **Status:** To Do 🔴
+* **Status:** Done 🟢
 
 ## 📖 Description & Objectives
 
@@ -15,7 +15,7 @@ Substituir o acoplamento direto e instanciação manual de adaptadores e casos d
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **Critério 1 (Bootstrap Container):** Implementar um contêiner centralizado capaz de associar interfaces abstratas a implementações concretas.
-* [ ] **Critério 2 (Resolução Automática):** Permitir a resolução automática de construtores de casos de uso injetando as dependências corretas (repositórios, config providers).
-* [ ] **Critério 3 (Desacoplamento do CLI):** Inicializar o contêiner em `main.py` e passar apenas as instâncias necessárias resolvidas para o `CLIController`.
-* [ ] **Critério 4 (Testes Unitários):** Garantir que o contêiner resolve dependências aninhadas sem erros de recursão.
+* [x] **Critério 1 (Bootstrap Container):** Implementar um contêiner centralizado capaz de associar interfaces abstratas a implementações concretas.
+* [x] **Critério 2 (Resolução Automática):** Permitir a resolução automática de construtores de casos de uso injetando as dependências corretas (repositórios, config providers).
+* [x] **Critério 3 (Desacoplamento do CLI):** Inicializar o contêiner em `main.py` e passar apenas as instâncias necessárias resolvidas para o `CLIController`.
+* [x] **Critério 4 (Testes Unitários):** Garantir que o contêiner resolve dependências aninhadas sem erros de recursão.
