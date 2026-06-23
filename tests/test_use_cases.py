@@ -1,9 +1,38 @@
 import pytest
 from datetime import date
 from src.domain.entities import BookEntity, ReaderEntity, LoanEntity, DomainError
-from src.app.ports import ILibraryRepository, IConfigProvider
+from src.app.ports import ILibraryRepository, IConfigProvider, ILoanHistoryRepository
 from src.app.use_cases import CheckoutUseCase, ReturnUseCase, ReserveUseCase, WaiveFineUseCase
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any
+
+class FakeHistoryRepository(ILoanHistoryRepository):
+    def __init__(self) -> None:
+        self.records: List[dict] = []
+
+    def archive_loan(
+        self,
+        loan: LoanEntity,
+        book_title: str,
+        final_status: str,
+        delay_days: int,
+        applied_rules: Optional[List[str]] = None,
+        original_fine: Optional[float] = None,
+        operator: Optional[str] = None
+    ) -> None:
+        self.records.append({
+            "loan_id": loan.loan_id,
+            "book_title": book_title,
+            "final_status": final_status,
+            "delay_days": delay_days,
+            "applied_rules": applied_rules,
+            "original_fine": original_fine,
+            "operator": operator,
+            "reader_id": loan.reader_id
+        })
+
+    def get_history_by_reader(self, reader_id: str) -> List[dict]:
+        return [r for r in self.records if r["reader_id"] == reader_id]
+
 
 class FakeLibraryRepository(ILibraryRepository):
     def __init__(self) -> None:
@@ -622,4 +651,112 @@ def test_input_validation_use_cases() -> None:
     # Waive malformed reader ID
     with pytest.raises(DomainError, match="Invalid reader ID format"):
         waive_use_case.execute(reader_id="R_123")
+
+
+def test_validator_invalid_types_and_empty() -> None:
+    from src.app.validators import InputValidator
+    with pytest.raises(DomainError, match="Invalid reader ID format"):
+        InputValidator.sanitize_and_validate_reader_id(123)  # type: ignore
+    with pytest.raises(DomainError, match="Invalid book ID format"):
+        InputValidator.sanitize_and_validate_book_id(123)  # type: ignore
+    with pytest.raises(DomainError, match="Invalid book ID format: cannot be empty"):
+        InputValidator.sanitize_and_validate_book_id("   ")
+    with pytest.raises(DomainError, match="Invalid test_field format"):
+        InputValidator.sanitize_and_validate_general(123, "test_field")  # type: ignore
+
+
+def test_evaluate_return_failures() -> None:
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    use_case = ReturnUseCase(repo, config)
+    
+    # Book not found
+    with pytest.raises(DomainError, match="Book not found"):
+        use_case.evaluate_return("B999", date(2026, 6, 12))
+        
+    # Active loan not found
+    book = BookEntity("B1", "DDD")
+    repo.save_book(book)
+    with pytest.raises(DomainError, match="No active loan found for this book"):
+        use_case.evaluate_return("B1", date(2026, 6, 12))
+        
+    # Return date before checkout date
+    loan = LoanEntity("L1", "B1", "R1", date(2026, 6, 10), date(2026, 6, 17))
+    repo.save_loan(loan)
+    with pytest.raises(DomainError, match="Return date cannot be before checkout date"):
+        use_case.evaluate_return("B1", date(2026, 6, 5))
+        
+    # Reader not found
+    with pytest.raises(DomainError, match="Reader not found"):
+        use_case.evaluate_return("B1", date(2026, 6, 12))
+
+
+def test_return_execute_reader_not_found() -> None:
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    use_case = ReturnUseCase(repo, config)
+    book = BookEntity("B1", "DDD")
+    loan = LoanEntity("L1", "B1", "R1", date(2026, 6, 10), date(2026, 6, 17))
+    repo.save_book(book)
+    repo.save_loan(loan)
+    with pytest.raises(DomainError, match="Reader not found"):
+        use_case.execute("B1", date(2026, 6, 12))
+
+
+def test_waive_fine_reader_not_found() -> None:
+    repo = FakeLibraryRepository()
+    use_case = WaiveFineUseCase(repo)
+    with pytest.raises(DomainError, match="Reader not found"):
+        use_case.execute("R999")
+
+
+def test_return_operator_login_exceptions(monkeypatch: pytest.MonkeyPatch) -> None:
+    import os
+    import getpass
+    
+    # Force getlogin and getuser to raise Exception
+    monkeypatch.setattr(os, "getlogin", lambda: (_ for _ in ()).throw(Exception("no terminal")))
+    monkeypatch.setattr(getpass, "getuser", lambda: (_ for _ in ()).throw(Exception("no user")))
+    
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    book = BookEntity("B1", "DDD")
+    reader = ReaderEntity("R1", "Alice")
+    loan = LoanEntity("L1", "B1", "R1", date(2026, 6, 1), date(2026, 6, 8))
+    
+    # Apply a fine so operator logging is triggered
+    reader.add_loan(loan)
+    repo.save_book(book)
+    repo.save_reader(reader)
+    repo.save_loan(loan)
+    
+    use_case = ReturnUseCase(repo, config)
+    # Return late (3 days late) -> fine of 6.0
+    updated_loan = use_case.execute("B1", date(2026, 6, 11))
+    assert updated_loan.fine_amount == 6.00
+
+
+def test_return_early_with_history() -> None:
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    history = FakeHistoryRepository()
+    
+    book = BookEntity("B1", "DDD")
+    reader = ReaderEntity("R1", "Alice")
+    loan = LoanEntity("L1", "B1", "R1", date(2026, 6, 10), date(2026, 6, 17))
+    
+    reader.add_loan(loan)
+    repo.save_book(book)
+    repo.save_reader(reader)
+    repo.save_loan(loan)
+    
+    use_case = ReturnUseCase(repo, config, history_repository=history)
+    # Return early (on June 15th instead of 17th)
+    updated_loan = use_case.execute("B1", date(2026, 6, 15))
+    assert updated_loan.return_date == date(2026, 6, 15)
+    assert len(history.records) == 1
+    assert history.records[0]["delay_days"] == 0
+    assert history.records[0]["final_status"] == "RETURNED_ON_TIME"
+
+
 

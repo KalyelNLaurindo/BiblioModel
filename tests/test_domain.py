@@ -252,3 +252,32 @@ def test_fine_calculator_returned_on_time() -> None:
     assert fine == 0.0
 
 
+def test_reader_pay_fine_underflow() -> None:
+    from src.domain.entities import ReaderEntity
+    reader = ReaderEntity(reader_id="R101", name="Jane Doe")
+    reader.apply_fine(5.0)
+    reader.pay_fine(10.0)
+    assert reader.fine_balance == 0.0
+
+
+def test_fine_policy_value_error() -> None:
+    from src.domain.policy import FinePolicyEngine
+    from src.domain.entities import ReaderEntity
+    
+    class FakeConfig:
+        def get_fine_policy(self) -> dict:
+            return {
+                "pcd_discount": "not_a_float",
+                "pcd_requires_approval": "true"
+            }
+            
+    engine = FinePolicyEngine(FakeConfig())
+    reader = ReaderEntity(reader_id="R101", name="Jane", reader_type="PCD")
+    rules = engine.evaluate_rules(10.0, reader, None, [])
+    assert len(rules) == 2
+    assert rules[0]["discount"] == 1.0  # default fallback
+    assert rules[0]["requires_approval"] is True
+
+
+
+
