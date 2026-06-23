@@ -201,7 +201,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-32](TSK-32.md)]: i18n Core Translation Service & Registry**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 72.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 
 * **[[TSK-33](TSK-33.md)]: UI Presenter CLI Localization Adapter**  
   * *Epic Link:* FT-10 (Architectural Resilience)  

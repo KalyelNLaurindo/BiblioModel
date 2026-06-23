@@ -50,6 +50,12 @@ class IConfigProvider(ABC):
         """
         pass
 
+    def get_language(self) -> Optional[str]:
+        """
+        Get active language setting from config provider.
+        """
+        return None
+
 
 class ILibraryRepository(ABC):
     """
@@ -309,6 +315,33 @@ class IReportExporter(ABC):
         """
         Export a report to CSV or HTML format and write it to the output path.
         Returns the path where the report was saved.
+        """
+        pass
+
+
+class ITranslationService(ABC):
+    """
+    Outbound port for translating string resources with locale fallback mechanisms.
+    """
+
+    @abstractmethod
+    def translate(self, key: str, **kwargs) -> str:
+        """
+        Translate the given key with variable interpolation.
+        """
+        pass
+
+    @abstractmethod
+    def set_locale(self, locale: str) -> None:
+        """
+        Set active locale manually.
+        """
+        pass
+
+    @abstractmethod
+    def get_locale(self) -> str:
+        """
+        Get currently active locale.
         """
         pass
 

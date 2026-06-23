@@ -67,6 +67,12 @@ class INIConfigAdapter(IConfigProvider):
             return dict(self._config["fine_policy"])
         return {}
 
+    def get_language(self) -> Optional[str]:
+        try:
+            return self._config.get("library", "lang", fallback=None)
+        except Exception:
+            return None
+
 
 class JSONPersistenceAdapter(ILibraryRepository):
     """
