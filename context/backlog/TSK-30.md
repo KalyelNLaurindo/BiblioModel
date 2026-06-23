@@ -20,8 +20,8 @@ The current `CLIController` in `src/infra/cli.py` violates the Single Responsibi
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **[Testing/Quality - TDD]:** Unit and integration tests are updated or created to validate the SMTP adapter, shell loop, and exporters independently.
-* [ ] **[Refactor - Domain/App]:** Interfaces `INotificationService` and `IReportExporter` are added to ports.
-* [ ] **[Refactor - Adapters]:** Implement `smtp_adapter.py`, `exporters.py`, and `shell.py` inside `src/infra/`.
-* [ ] **[Refactor - CLI]:** Clean up `cli.py` to route requests, reducing it to under 300 lines of code.
-* [ ] **[Verification]:** Full test suite runs and passes green with zero regressions.
+* [x] **[Testing/Quality - TDD]:** Unit and integration tests are updated or created to validate the SMTP adapter, shell loop, and exporters independently.
+* [x] **[Refactor - Domain/App]:** Interfaces `INotificationService` and `IReportExporter` are added to ports.
+* [x] **[Refactor - Adapters]:** Implement `smtp_adapter.py`, `exporters.py`, and `shell.py` inside `src/infra/`.
+* [x] **[Refactor - CLI]:** Clean up `cli.py` to route requests, reducing it to under 300 lines of code.
+* [x] **[Verification]:** Full test suite runs and passes green with zero regressions.

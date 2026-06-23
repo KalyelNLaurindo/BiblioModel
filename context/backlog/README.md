@@ -189,7 +189,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-30](TSK-30.md)]: Refactor God Class CLIController to Adhere to SRP**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 144.0 (High Priority / Must Have) | Reach: 90 / Impact: 2 / Confidence: 0.8 / Effort: 1  
-  * *Status:* To Do  
+  * *Status:* Done  
 
 * **[[TSK-31](TSK-31.md)]: Testing Coverage Monitoring and CLI Exclusion Policy**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
