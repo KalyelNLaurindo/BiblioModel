@@ -228,7 +228,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-38](TSK-38.md)]: Robustness and Coverage for TranslationService**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 80.0 (Medium Priority / Should Have) | Reach: 80 / Impact: 2 / Confidence: 1.0 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 
 ### **💾 Phase 11: Evolução de Schema & Controle de Versão de Dados**
 
@@ -269,7 +269,6 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🔴 To Do (Ready for Development)**
 
-* [ ] **[[TSK-38](TSK-38.md)]:** Robustness and Coverage for TranslationService
 * [ ] **[[TSK-39](TSK-39.md)]:** Metadata Headers and Versioning for JSON Database
 * [ ] **[[TSK-40](TSK-40.md)]:** Linear Schema Migrations Mechanism in Pure Python
 * [ ] **[[TSK-41](TSK-41.md)]:** Size-based Log Rotation in setup_logger
@@ -328,3 +327,4 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-35](TSK-35.md)]:** Library CLI A11y Suite (Monochrome high-contrast themes and clean reader streams)
 * [x] **[[TSK-36](TSK-36.md)]:** Robustness and Boundary Tests for JSONPersistenceAdapter
 * [x] **[[TSK-37](TSK-37.md)]:** Integration Tests for DIContainer
+* [x] **[[TSK-38](TSK-38.md)]:** Robustness and Coverage for TranslationService

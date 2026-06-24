@@ -14,13 +14,13 @@ Ensure the internationalization (i18n) component handles edge cases gracefully, 
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] i18n translation service is implemented (TSK-32).
+* [x] i18n translation service is implemented (TSK-32).
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **[Testing/Quality - TDD]:** Test cases under `tests/test_i18n.py` mock missing JSON translation files and missing translation keys to check correct fallback behavior.
-* [ ] **[Functional - Translation]:** Service handles missing keys without raising KeyErrors, outputting a fallback string (or key name).
-* [ ] **[Verification]:** pytest runs successfully with 100% pass rate.
+* [x] **[Testing/Quality - TDD]:** Test cases under `tests/test_i18n.py` mock missing JSON translation files and missing translation keys to check correct fallback behavior.
+* [x] **[Functional - Translation]:** Service handles missing keys without raising KeyErrors, outputting a fallback string (or key name).
+* [x] **[Verification]:** pytest runs successfully with 100% pass rate.
 
 ---
 **Author:** Kalyel N. Laurindo / Software Engineer
