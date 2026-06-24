@@ -125,3 +125,60 @@ def test_di_resolves_cli_controller_with_real_use_cases() -> None:
     assert isinstance(controller.waive_fine_use_case, WaiveFineUseCase)
     assert isinstance(controller.generate_report_use_case, GenerateReportUseCase)
 
+
+# Classes for Circular Dependency Test
+class ClassA:
+    def __init__(self, dep: 'ClassB') -> None:
+        self.dep = dep
+
+class ClassB:
+    def __init__(self, dep: 'ClassA') -> None:
+        self.dep = dep
+
+# Classes/Interfaces for Unregistered Dependency Test
+class IInterfaceY(ABC):
+    @abstractmethod
+    def run(self) -> None:
+        pass
+
+class ClassX:
+    def __init__(self, dep: IInterfaceY) -> None:
+        self.dep = dep
+
+
+def test_circular_dependency_error() -> None:
+    from src.infra.di import CircularDependencyError
+    container = DIContainer()
+    container.register(ClassA, ClassA)
+    container.register(ClassB, ClassB)
+
+    with pytest.raises(CircularDependencyError) as exc_info:
+        container.resolve(ClassA)
+    
+    assert "Circular dependency detected" in str(exc_info.value)
+    assert "ClassA -> ClassB -> ClassA" in str(exc_info.value)
+
+
+def test_unregistered_dependency_with_path() -> None:
+    from src.infra.di import UnregisteredDependencyError
+    container = DIContainer()
+    container.register(ClassX, ClassX)
+
+    with pytest.raises(UnregisteredDependencyError) as exc_info:
+        container.resolve(ClassX)
+
+    assert "is not registered" in str(exc_info.value)
+    assert "Resolution path: ClassX -> IInterfaceY" in str(exc_info.value)
+
+
+def test_duplicate_registration_error() -> None:
+    from src.infra.di import DuplicateRegistrationError
+    container = DIContainer()
+    container.register(IDummyService, DummyService)
+
+    with pytest.raises(DuplicateRegistrationError) as exc_info:
+        container.register(IDummyService, DummyService)
+
+    assert "already registered" in str(exc_info.value)
+
+

@@ -224,7 +224,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-37](TSK-37.md)]: Integration Tests for DIContainer**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 80.0 (Medium Priority / Should Have) | Reach: 80 / Impact: 2 / Confidence: 1.0 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 * **[[TSK-38](TSK-38.md)]: Robustness and Coverage for TranslationService**  
   * *Epic Link:* FT-10 (Architectural Resilience)  
   * *RICE Score:* 80.0 (Medium Priority / Should Have) | Reach: 80 / Impact: 2 / Confidence: 1.0 / Effort: 2  
@@ -269,7 +269,6 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🔴 To Do (Ready for Development)**
 
-* [ ] **[[TSK-37](TSK-37.md)]:** Integration Tests for DIContainer
 * [ ] **[[TSK-38](TSK-38.md)]:** Robustness and Coverage for TranslationService
 * [ ] **[[TSK-39](TSK-39.md)]:** Metadata Headers and Versioning for JSON Database
 * [ ] **[[TSK-40](TSK-40.md)]:** Linear Schema Migrations Mechanism in Pure Python
@@ -328,3 +327,4 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-34](TSK-34.md)]:** Interactive Localized Shell UX & Error Badges
 * [x] **[[TSK-35](TSK-35.md)]:** Library CLI A11y Suite (Monochrome high-contrast themes and clean reader streams)
 * [x] **[[TSK-36](TSK-36.md)]:** Robustness and Boundary Tests for JSONPersistenceAdapter
+* [x] **[[TSK-37](TSK-37.md)]:** Integration Tests for DIContainer
