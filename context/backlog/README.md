@@ -278,6 +278,8 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [ ] **[[TSK-42](TSK-42.md)]:** Automatic Compression and Cleanup of Historical Logs
 * [ ] **[[TSK-43](TSK-43.md)]:** Comprehensive Code Comments Review & Simplification
 * [ ] **[[TSK-44](TSK-44.md)]:** Decoupled Telemetry Logging and Trace Spreading
+* [ ] **[[TSK-45](TSK-45.md)]:** HTTP REST API Backend Server Integration
+
 
 ### **🟡 In Progress (Actively Being Built)**
 

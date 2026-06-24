@@ -255,7 +255,7 @@ To extend BiblioModel's capabilities, the following features are in active plann
 2. **Schema Migrations Engine (Active Backlog - Phase 11)**: Implementation of metadata database headers and linear migration scripts in pure Python for zero-data-loss upgrades.
 3. **Log Rotation & Maintenance CLI (Active Backlog - Phase 12)**: Introduction of `RotatingFileHandler` options and automated log compression/cleanup commands.
 4. **SQL Database Adapter (Planned)**: Transition from local JSON serialization to an SQLite/PostgreSQL concrete repository implementing the outbound `ILibraryRepository` port, enabling concurrent client-server write access.
-5. **Web API Layer (Planned)**: Package the use cases under a FastAPI/Flask HTTP gateway, exposing RESTful endpoints for remote catalog integration.
+5. **Web API Layer (Active Backlog - [TSK-45](context/backlog/TSK-45.md))**: Package the use cases under a FastAPI/Flask HTTP gateway, exposing RESTful endpoints (`POST /loans`, `POST /returns`, `POST /reservations`, etc.) for remote catalog integration.
 6. **Bulk CSV Importer (Planned)**: Develop a bootstrap command tool capable of bulk importing thousands of reader and book entities from Excel spreadsheets.
 
 ---
