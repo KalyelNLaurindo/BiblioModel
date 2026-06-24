@@ -187,6 +187,9 @@ class JSONPersistenceAdapter(ILibraryRepository):
             if os.path.exists(self._file_path) and os.path.getsize(self._file_path) > 0:
                 self._parse_and_validate(self._file_path)
             else:
+                bak_path = self._file_path + ".bak"
+                if os.path.exists(bak_path) and os.path.getsize(bak_path) > 0:
+                    raise ValueError("Primary database is empty or missing, but backup exists")
                 self._initialize_empty()
         except Exception as e:
             bak_path = self._file_path + ".bak"
