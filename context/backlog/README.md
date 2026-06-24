@@ -279,6 +279,7 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [ ] **[[TSK-43](TSK-43.md)]:** Comprehensive Code Comments Review & Simplification
 * [ ] **[[TSK-44](TSK-44.md)]:** Decoupled Telemetry Logging and Trace Spreading
 * [ ] **[[TSK-45](TSK-45.md)]:** HTTP REST API Backend Server Integration
+* [ ] **[[TSK-46](TSK-46.md)]:** Terminal UI/UX Overhaul — Interactive Shell Visual Redesign (3 SP)
 
 
 ### **🟡 In Progress (Actively Being Built)**
