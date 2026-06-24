@@ -124,8 +124,8 @@ def test_recovery_from_corrupted_json(caplog) -> None:
         # Verify that primary file was healed (contains valid JSON now)
         with open(tmp_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            assert "books" in data
-            assert "B1" in data["books"]
+            books_dict = data["data"]["books"] if "data" in data else data["books"]
+            assert "B1" in books_dict
 
         # Verify warning logs were produced
         warnings = [record.message for record in caplog.records if record.levelname == "WARNING"]
@@ -135,9 +135,9 @@ def test_recovery_from_corrupted_json(caplog) -> None:
         # Verify that the backup file is still valid and not replaced by corrupted data
         with open(bak_path, "r", encoding="utf-8") as f:
             bak_data = json.load(f)
-            assert "books" in bak_data
-            assert "B1" in bak_data["books"]
-            assert bak_data["books"]["B1"]["title"] == "Backup Title"
+            bak_books = bak_data["data"]["books"] if "data" in bak_data else bak_data["books"]
+            assert "B1" in bak_books
+            assert bak_books["B1"]["title"] == "Backup Title"
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)

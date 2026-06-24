@@ -2,6 +2,7 @@ import os
 import json
 import locale
 from typing import Dict, Any, Optional
+# pyrefly: ignore [missing-import]
 from src.app.ports import ITranslationService, IConfigProvider
 
 class TranslationService(ITranslationService):

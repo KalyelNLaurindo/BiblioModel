@@ -235,11 +235,11 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * **[[TSK-39](TSK-39.md)]: Metadata Headers and Versioning for JSON Database**  
   * *Epic Link:* FT-04 (Repository Ports & Safe Adapter)  
   * *RICE Score:* 135.0 (High Priority / Must Have) | Reach: 90 / Impact: 3 / Confidence: 1.0 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 * **[[TSK-40](TSK-40.md)]: Linear Schema Migrations Mechanism in Pure Python**  
   * *Epic Link:* FT-04 (Repository Ports & Safe Adapter)  
   * *RICE Score:* 90.0 (High Priority / Should Have) | Reach: 90 / Impact: 2 / Confidence: 1.0 / Effort: 2  
-  * *Status:* To Do  
+  * *Status:* Done  
 
 ### **⚙️ Phase 12: Gestão de Ciclo de Vida de Logs & Rotação**
 
@@ -269,8 +269,6 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 
 ### **🔴 To Do (Ready for Development)**
 
-* [ ] **[[TSK-39](TSK-39.md)]:** Metadata Headers and Versioning for JSON Database
-* [ ] **[[TSK-40](TSK-40.md)]:** Linear Schema Migrations Mechanism in Pure Python
 * [ ] **[[TSK-41](TSK-41.md)]:** Size-based Log Rotation in setup_logger
 * [ ] **[[TSK-42](TSK-42.md)]:** Automatic Compression and Cleanup of Historical Logs
 * [ ] **[[TSK-43](TSK-43.md)]:** Comprehensive Code Comments Review & Simplification
@@ -328,3 +326,5 @@ The backlog is structured in a strict TDD (Domain-Driven Bottom-Up) order, start
 * [x] **[[TSK-36](TSK-36.md)]:** Robustness and Boundary Tests for JSONPersistenceAdapter
 * [x] **[[TSK-37](TSK-37.md)]:** Integration Tests for DIContainer
 * [x] **[[TSK-38](TSK-38.md)]:** Robustness and Coverage for TranslationService
+* [x] **[[TSK-39](TSK-39.md)]:** Metadata Headers and Versioning for JSON Database
+* [x] **[[TSK-40](TSK-40.md)]:** Linear Schema Migrations Mechanism in Pure Python

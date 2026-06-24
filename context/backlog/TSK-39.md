@@ -16,13 +16,13 @@ Add metadata structure to the JSON persistence format to support versioning. Thi
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] JSON persistence adapter is implemented (TSK-08).
+* [x] JSON persistence adapter is implemented (TSK-08).
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **[Testing/Quality - TDD]:** Test cases assert that saving database outputs the correct metadata section, and that reading database without metadata defaults to version 0.
-* [ ] **[Functional - Database]:** Database JSON file is structured as `{ "metadata": { "schema_version": 1, ... }, "data": { ... } }`.
-* [ ] **[Verification]:** pytest runs successfully with 100% pass rate.
+* [x] **[Testing/Quality - TDD]:** Test cases assert that saving database outputs the correct metadata section, and that reading database without metadata defaults to version 0.
+* [x] **[Functional - Database]:** Database JSON file is structured as `{ "metadata": { "schema_version": 1, ... }, "data": { ... } }`.
+* [x] **[Verification]:** pytest runs successfully with 100% pass rate.
 
 ---
 **Author:** Kalyel N. Laurindo / Software Engineer
