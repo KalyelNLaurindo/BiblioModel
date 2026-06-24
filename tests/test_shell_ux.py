@@ -107,3 +107,14 @@ def test_shell_language_switching_via_prompt() -> None:
         
     # Check that language was updated to 'es' in the translation service
     assert translation_service.get_locale() == "es"
+
+def test_cli_controller_defaults_to_shell_on_empty_args() -> None:
+    repo = FakeLibraryRepository()
+    config = FakeConfigProvider()
+    controller = CLIController(repo, config)
+    
+    with patch("src.infra.shell.InteractiveShell.run", return_value="mocked_shell_run") as mock_run:
+        res = controller.execute([])
+        assert res == "mocked_shell_run"
+        mock_run.assert_called_once()
+

@@ -396,8 +396,12 @@ class CLIController:
 
         logger = logging.getLogger("bibliomodel")
 
+        # Default empty arguments to shell command
+        if not cleaned_args:
+            cleaned_args = ["shell"]
+
         # Intercept help, -h, --help
-        if not cleaned_args or "-h" in cleaned_args or "--help" in cleaned_args or "help" in cleaned_args:
+        if "-h" in cleaned_args or "--help" in cleaned_args or "help" in cleaned_args:
             help_output = CLIHelpSystem.render_help(self.config_provider, self.translation_service)
             elapsed_ms = (time.perf_counter() - start_time) * 1000
             logger.info(
@@ -405,6 +409,7 @@ class CLIController:
                 f"Status: success | Execution resolved in {elapsed_ms:.2f}ms"
             )
             return help_output
+
         
         parser = TestableArgumentParser(
             description="BiblioModel CLI Library Loan Tracking System",

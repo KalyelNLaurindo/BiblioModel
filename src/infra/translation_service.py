@@ -10,8 +10,12 @@ class TranslationService(ITranslationService):
     resolving the active language from a hierarchical resolution path, and performing translation.
     """
 
-    def __init__(self, config_provider: IConfigProvider = None, locales_dir: str = "locales") -> None:
+    def __init__(self, config_provider: IConfigProvider = None, locales_dir: str = None) -> None:
         self.config_provider = config_provider
+        if not locales_dir:
+            import sys
+            base_path = getattr(sys, "_MEIPASS", os.path.abspath("."))
+            locales_dir = os.path.join(base_path, "locales")
         self.locales_dir = locales_dir
         self._active_locale: Optional[str] = None
         self._translations: Dict[str, Dict[str, str]] = {}
