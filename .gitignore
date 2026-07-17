@@ -131,3 +131,7 @@ loan_history.json.tmp
 daily_handover_report.txt
 reports/
 notifications/
+
+# Agent context files — never commit
+CLAUDE.md
+claude.md
