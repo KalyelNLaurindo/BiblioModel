@@ -1,5 +1,21 @@
 import inspect
-from typing import Dict, Type, Any, Callable, Tuple, Optional
+from typing import Dict, Type, Any, Callable, Tuple, Optional, List
+
+class DIError(ValueError):
+    """Base exception for all DI Container errors."""
+    pass
+
+class CircularDependencyError(DIError):
+    """Raised when a circular dependency is detected."""
+    pass
+
+class UnregisteredDependencyError(DIError):
+    """Raised when a dependency cannot be resolved because it is not registered."""
+    pass
+
+class DuplicateRegistrationError(DIError):
+    """Raised when an interface is registered more than once."""
+    pass
 
 class DIContainer:
     """
@@ -11,18 +27,27 @@ class DIContainer:
     def __init__(self) -> None:
         self._registry: Dict[Type[Any], Tuple[Any, bool]] = {}
         self._instances: Dict[Type[Any], Any] = {}
+        self._resolution_stack: List[Type[Any]] = []
 
     def register(self, interface: Type[Any], concrete: Any, singleton: bool = True) -> None:
         """
         Registers an interface mapping to a concrete class, instance, or factory function.
         If singleton is True, the resolved instance is cached and reused.
         """
+        if interface in self._registry:
+            raise DuplicateRegistrationError(f"Dependency {interface} is already registered in the container")
         self._registry[interface] = (concrete, singleton)
 
     def resolve(self, interface: Type[Any]) -> Any:
         """
         Resolves the requested interface or concrete class recursively.
         """
+        if isinstance(interface, str):
+            for reg_type in list(self._registry.keys()) + list(self._instances.keys()):
+                if hasattr(reg_type, "__name__") and reg_type.__name__ == interface:
+                    interface = reg_type
+                    break
+
         import typing
         origin = typing.get_origin(interface)
         # Support UnionType (for T | None in Python 3.10+) and standard typing.Union
@@ -37,30 +62,45 @@ class DIContainer:
             else:
                 return None
 
-        if interface in self._instances:
-            return self._instances[interface]
+        if interface in self._resolution_stack:
+            path_names = [cls.__name__ if hasattr(cls, "__name__") else str(cls) for cls in self._resolution_stack + [interface]]
+            path_str = " -> ".join(path_names)
+            raise CircularDependencyError(f"Circular dependency detected: {path_str}")
 
-        if interface not in self._registry:
-            if inspect.isclass(interface) and not inspect.isabstract(interface):
-                # If it's a concrete class not registered, try to instantiate it automatically
-                resolved = self._instantiate(interface)
-                # By default, treat auto-resolved concrete classes as singletons to preserve state
+        self._resolution_stack.append(interface)
+        try:
+            if interface in self._instances:
+                return self._instances[interface]
+
+            if interface not in self._registry:
+                if inspect.isclass(interface) and not inspect.isabstract(interface):
+                    # If it's a concrete class not registered, try to instantiate it automatically
+                    resolved = self._instantiate(interface)
+                    # By default, treat auto-resolved concrete classes as singletons to preserve state
+                    self._instances[interface] = resolved
+                    return resolved
+                
+                path_names = [cls.__name__ if hasattr(cls, "__name__") else str(cls) for cls in self._resolution_stack]
+                path_str = " -> ".join(path_names)
+                raise UnregisteredDependencyError(
+                    f"Dependency {interface} is not registered in the container. "
+                    f"Resolution path: {path_str}"
+                )
+
+            concrete, singleton = self._registry[interface]
+
+            if not inspect.isclass(concrete) and not callable(concrete):
+                # If registered object is already a pre-instantiated value/object
+                return concrete
+
+            resolved = self._instantiate(concrete)
+
+            if singleton:
                 self._instances[interface] = resolved
-                return resolved
-            raise ValueError(f"Dependency {interface} is not registered in the container")
 
-        concrete, singleton = self._registry[interface]
-
-        if not inspect.isclass(concrete) and not callable(concrete):
-            # If registered object is already a pre-instantiated value/object
-            return concrete
-
-        resolved = self._instantiate(concrete)
-
-        if singleton:
-            self._instances[interface] = resolved
-
-        return resolved
+            return resolved
+        finally:
+            self._resolution_stack.pop()
 
     def _instantiate(self, concrete: Any) -> Any:
         if not inspect.isclass(concrete):

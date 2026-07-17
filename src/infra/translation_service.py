@@ -2,6 +2,7 @@ import os
 import json
 import locale
 from typing import Dict, Any, Optional
+# pyrefly: ignore [missing-import]
 from src.app.ports import ITranslationService, IConfigProvider
 
 class TranslationService(ITranslationService):
@@ -88,10 +89,17 @@ class TranslationService(ITranslationService):
         Translates a string resource key into the active locale, interpolating variables.
         """
         lang = self.get_locale()
+        
+        # Check active locale first
         strings = self._translations.get(lang, {})
         template = strings.get(key)
         
-        # Fallback to 'pt' if not found in active locale
+        # Fallback to 'en' if not found and active is not 'en'
+        if template is None and lang != "en":
+            strings_en = self._translations.get("en", {})
+            template = strings_en.get(key)
+            
+        # Fallback to 'pt' if still not found and active is not 'pt'
         if template is None and lang != "pt":
             strings_pt = self._translations.get("pt", {})
             template = strings_pt.get(key)

@@ -14,13 +14,13 @@ Ensure the custom Dependency Injection (DI) Container functions reliably under c
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] DI Container infrastructure is implemented (TSK-28).
+* [x] DI Container infrastructure is implemented (TSK-28).
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **[Testing/Quality - TDD]:** Test cases under `tests/test_di.py` assert dependency resolution error behaviors, cyclic dependency detection, and interface binding checks.
-* [ ] **[Functional - DI]:** Container raises custom exceptions explaining the graph resolution path on errors.
-* [ ] **[Verification]:** pytest runs successfully with 100% pass rate.
+* [x] **[Testing/Quality - TDD]:** Test cases under `tests/test_di.py` assert dependency resolution error behaviors, cyclic dependency detection, and interface binding checks.
+* [x] **[Functional - DI]:** Container raises custom exceptions explaining the graph resolution path on errors.
+* [x] **[Verification]:** pytest runs successfully with 100% pass rate.
 
 ---
 **Author:** Kalyel N. Laurindo / Software Engineer

@@ -124,8 +124,8 @@ def test_recovery_from_corrupted_json(caplog) -> None:
         # Verify that primary file was healed (contains valid JSON now)
         with open(tmp_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            assert "books" in data
-            assert "B1" in data["books"]
+            books_dict = data["data"]["books"] if "data" in data else data["books"]
+            assert "B1" in books_dict
 
         # Verify warning logs were produced
         warnings = [record.message for record in caplog.records if record.levelname == "WARNING"]
@@ -135,9 +135,9 @@ def test_recovery_from_corrupted_json(caplog) -> None:
         # Verify that the backup file is still valid and not replaced by corrupted data
         with open(bak_path, "r", encoding="utf-8") as f:
             bak_data = json.load(f)
-            assert "books" in bak_data
-            assert "B1" in bak_data["books"]
-            assert bak_data["books"]["B1"]["title"] == "Backup Title"
+            bak_books = bak_data["data"]["books"] if "data" in bak_data else bak_data["books"]
+            assert "B1" in bak_books
+            assert bak_books["B1"]["title"] == "Backup Title"
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
@@ -166,3 +166,106 @@ def test_schema_validation_boot_failure() -> None:
             os.remove(tmp_path)
         if os.path.exists(bak_path):
             os.remove(bak_path)
+
+
+def test_recovery_when_primary_empty_but_backup_valid() -> None:
+    # Arrange
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as tmp:
+        tmp_path = tmp.name
+    bak_path = tmp_path + ".bak"
+
+    try:
+        # Create a valid backup file (.bak)
+        repo = JSONPersistenceAdapter(bak_path)
+        book = BookEntity("B1", "Backup Title")
+        repo.save_book(book)
+
+        # Create an empty primary file (size 0)
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            f.write("")
+
+        # Act: Instantiating should trigger self-healing recovery from backup
+        healed_repo = JSONPersistenceAdapter(tmp_path)
+
+        # Assert
+        loaded_book = healed_repo.get_book("B1")
+        assert loaded_book is not None
+        assert loaded_book.title == "Backup Title"
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        if os.path.exists(bak_path):
+            os.remove(bak_path)
+
+
+def test_persistence_blocked_by_os_permission(monkeypatch) -> None:
+    # Arrange
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as tmp:
+        tmp_path = tmp.name
+
+    try:
+        repo = JSONPersistenceAdapter(tmp_path)
+        book = BookEntity("B1", "Title 1")
+        
+        # Mock os.replace to raise PermissionError
+        def mock_replace(src, dst):
+            raise PermissionError("Access denied")
+        monkeypatch.setattr(os, "replace", mock_replace)
+
+        # Act & Assert: Should raise DomainError on save
+        with pytest.raises(DomainError, match="Failed to persist state database to disk"):
+            repo.save_book(book)
+
+        # Temp file should be cleaned up
+        tmp_file_path = tmp_path + ".tmp"
+        assert not os.path.exists(tmp_file_path)
+    finally:
+        # Restore mock to avoid issues cleaning up
+        monkeypatch.undo()
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+
+def test_atomic_write_failure_mid_operation(monkeypatch) -> None:
+    # Arrange
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as tmp:
+        tmp_path = tmp.name
+    bak_path = tmp_path + ".bak"
+
+    try:
+        repo = JSONPersistenceAdapter(tmp_path)
+        book1 = BookEntity("B1", "Book 1")
+        repo.save_book(book1)
+
+        # Ensure primary contains B1 and read its content
+        assert os.path.exists(tmp_path)
+        with open(tmp_path, "r", encoding="utf-8") as f:
+            primary_content_before = f.read()
+
+        # Mock second os.replace to fail, but let the first one (rotation) succeed
+        original_replace = os.replace
+        calls = []
+        def mock_replace(src, dst):
+            calls.append((src, dst))
+            if dst == tmp_path:
+                raise OSError("Disk full / Write failed mid-operation")
+            original_replace(src, dst)
+
+        monkeypatch.setattr(os, "replace", mock_replace)
+
+        book2 = BookEntity("B2", "Book 2")
+        with pytest.raises(DomainError, match="Failed to persist state database to disk"):
+            repo.save_book(book2)
+
+        # The backup file (.bak) should match the primary state before the failure (B1)
+        assert os.path.exists(bak_path)
+        with open(bak_path, "r", encoding="utf-8") as f:
+            bak_content_after = f.read()
+        assert primary_content_before == bak_content_after
+    finally:
+        monkeypatch.undo()
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        if os.path.exists(bak_path):
+            os.remove(bak_path)
+

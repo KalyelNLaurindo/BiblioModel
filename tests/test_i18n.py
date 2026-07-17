@@ -85,3 +85,69 @@ def test_set_locale_invalid(temp_locales_dir):
     service = TranslationService(locales_dir=temp_locales_dir)
     with pytest.raises(ValueError):
         service.set_locale("invalid_lang")
+
+
+def test_translation_fallback_chain(tmp_path):
+    # Setup specific translation files to test i18n fallback chain: lang -> en -> pt
+    loc_dir = tmp_path / "locales_fallback"
+    loc_dir.mkdir()
+    
+    pt_data = {
+        "key_in_pt": "Valor PT",
+        "key_in_en_and_pt": "Valor PT",
+        "key_in_all": "Valor PT"
+    }
+    en_data = {
+        "key_in_en_and_pt": "Value EN",
+        "key_in_all": "Value EN"
+    }
+    de_data = {
+        "key_in_all": "Wert DE"
+    }
+    
+    (loc_dir / "pt.json").write_text(json.dumps(pt_data), encoding="utf-8")
+    (loc_dir / "en.json").write_text(json.dumps(en_data), encoding="utf-8")
+    (loc_dir / "de.json").write_text(json.dumps(de_data), encoding="utf-8")
+
+    service = TranslationService(locales_dir=str(loc_dir))
+    service.set_locale("de")
+
+    # 1. key_in_all is present in de.json -> should return DE value
+    assert service.translate("key_in_all") == "Wert DE"
+
+    # 2. key_in_en_and_pt is absent in de.json but present in en.json -> should fallback to EN
+    assert service.translate("key_in_en_and_pt") == "Value EN"
+
+    # 3. key_in_pt is absent in de.json and en.json, but present in pt.json -> should fallback to PT
+    assert service.translate("key_in_pt") == "Valor PT"
+
+    # 4. key_not_anywhere is absent everywhere -> should return the key itself
+    assert service.translate("key_not_anywhere") == "key_not_anywhere"
+
+
+def test_translation_service_initialization_with_corrupt_files(tmp_path):
+    # Setup a directory with a malformed json file
+    loc_dir = tmp_path / "locales_corrupt"
+    loc_dir.mkdir()
+    
+    (loc_dir / "en.json").write_text("{ malformed json", encoding="utf-8")
+    
+    # Should not raise exception on init
+    service = TranslationService(locales_dir=str(loc_dir))
+    service.set_locale("en")
+    
+    # Translating should gracefully return the key since file was corrupt/empty
+    assert service.translate("welcome") == "welcome"
+
+
+def test_translation_interpolation_mismatch(temp_locales_dir):
+    service = TranslationService(locales_dir=temp_locales_dir)
+    service.set_locale("en")
+    
+    # "fine_amount" is "Fine: ${amount}"
+    # Mismatch 1: missing parameter
+    assert service.translate("fine_amount") == "Fine: ${amount}"
+    
+    # Mismatch 2: invalid parameter format or extra parameters
+    assert service.translate("fine_amount", wrong_param="10.00") == "Fine: ${amount}"
+

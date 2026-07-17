@@ -86,6 +86,7 @@ class JSONPersistenceAdapter(ILibraryRepository):
         self._readers: Dict[str, ReaderEntity] = {}
         self._loans: Dict[str, LoanEntity] = {}
         self._in_transaction = False
+        self._needs_save_after_migration = False
         self._load_data()
 
     def clear_cache(self) -> None:
@@ -107,10 +108,25 @@ class JSONPersistenceAdapter(ILibraryRepository):
         Loads JSON database structure and hydrates objects. Validates schema format.
         """
         with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            raw_data = json.load(f)
 
-        if not isinstance(data, dict):
+        if not isinstance(raw_data, dict):
             raise ValueError("Root element is not a dictionary")
+
+        schema_version = 0
+        if "metadata" in raw_data and isinstance(raw_data["metadata"], dict):
+            schema_version = raw_data["metadata"].get("schema_version", 0)
+
+        CURRENT_SCHEMA_VERSION = 1
+        if schema_version < CURRENT_SCHEMA_VERSION:
+            from src.infra.migrations import global_migration_registry
+            raw_data = global_migration_registry.migrate(raw_data, schema_version, CURRENT_SCHEMA_VERSION)
+            self._needs_save_after_migration = True
+
+        if "data" not in raw_data or not isinstance(raw_data["data"], dict):
+            raise ValueError("Missing or invalid 'data' section in schema version 1")
+
+        data = raw_data["data"]
         for key in ("books", "readers", "loans"):
             if key not in data or not isinstance(data[key], dict):
                 raise ValueError(f"Missing or invalid section: '{key}'")
@@ -186,7 +202,13 @@ class JSONPersistenceAdapter(ILibraryRepository):
         try:
             if os.path.exists(self._file_path) and os.path.getsize(self._file_path) > 0:
                 self._parse_and_validate(self._file_path)
+                if self._needs_save_after_migration:
+                    self._save_to_disk()
+                    self._needs_save_after_migration = False
             else:
+                bak_path = self._file_path + ".bak"
+                if os.path.exists(bak_path) and os.path.getsize(bak_path) > 0:
+                    raise ValueError("Primary database is empty or missing, but backup exists")
                 self._initialize_empty()
         except Exception as e:
             bak_path = self._file_path + ".bak"
@@ -343,10 +365,18 @@ class JSONPersistenceAdapter(ILibraryRepository):
                 "reader_type": getattr(reader, "reader_type", "Regular")
             }
 
+        import datetime
         return {
-            "books": books_data,
-            "readers": readers_data,
-            "loans": loans_data
+            "metadata": {
+                "schema_version": 1,
+                "last_written_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "engine_version": "1.0.0"
+            },
+            "data": {
+                "books": books_data,
+                "readers": readers_data,
+                "loans": loans_data
+            }
         }
 
     def _save_to_disk(self) -> None:

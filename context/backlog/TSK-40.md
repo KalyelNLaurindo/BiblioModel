@@ -14,13 +14,13 @@ Implement a pure Python database migration manager to transform JSON data from o
 
 ## ✅ Definition of Ready (DoR)
 
-* [ ] JSON Database metadata header structure is implemented (TSK-39).
+* [x] JSON Database metadata header structure is implemented (TSK-39).
 
 ## 🏁 Definition of Done (DoD) & Acceptance Criteria
 
-* [ ] **[Testing/Quality - TDD]:** Test cases verify linear progression of migrations, handling of database backups on migration failures, and failure rollback.
-* [ ] **[Functional - Migrations]:** Old JSON database versions (version 0 or 1) migrate automatically on start without losing data.
-* [ ] **[Verification]:** pytest runs successfully with 100% pass rate.
+* [x] **[Testing/Quality - TDD]:** Test cases verify linear progression of migrations, handling of database backups on migration failures, and failure rollback.
+* [x] **[Functional - Migrations]:** Old JSON database versions (version 0 or 1) migrate automatically on start without losing data.
+* [x] **[Verification]:** pytest runs successfully with 100% pass rate.
 
 ---
 **Author:** Kalyel N. Laurindo / Software Engineer
